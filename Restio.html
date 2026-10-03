@@ -31,7 +31,7 @@
                             cinema: '#d4af37',
                             facebook: '#1877f2',
                             instagram: '#e4405f',
-                            tiktok: '#fe2c55',
+                            tiktok: '#25F4EE',
                             twitter: '#1da1f2',
                             dribbble: '#ea4c89',
                             behance: '#1769ff',
@@ -171,6 +171,36 @@
         #toast {
             transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.25s ease;
         }
+        html:not(.dark) #guideline-drawer,
+        html:not(.dark) #guideline-preview-stage,
+        html:not(.dark) #paper-controls {
+            background-color: var(--bg-main) !important;
+            border-color: var(--border-subtle) !important;
+        }
+        html:not(.dark) #copy-card-button,
+        html:not(.dark) #copy-card-button:hover {
+            color: var(--text-main) !important;
+        }
+        #tab-content .text-resolve-accent,
+        #tab-content .text-amber-400,
+        #tab-content .text-indigo-400,
+        #tab-content button[title="Inspect in Workbench"] i,
+        #tab-content button[title="Download Blank Slate"] i,
+        #tab-content button:hover,
+        #tab-content .group:hover h4 { color: var(--tab-accent) !important; }
+        #tab-content .border-resolve-accent,
+        #tab-content .border-indigo-500 { border-color: var(--tab-accent) !important; }
+        #tab-content button[title="Inspect in Workbench"],
+        #tab-content button[title="Download Blank Slate"] {
+            background: color-mix(in srgb, var(--tab-accent) 10%, transparent) !important;
+            border: 1px solid color-mix(in srgb, var(--tab-accent) 35%, transparent) !important;
+            box-shadow: none;
+        }
+        #tab-content button[title="Inspect in Workbench"]:hover,
+        #tab-content button[title="Download Blank Slate"]:hover {
+            background: color-mix(in srgb, var(--tab-accent) 20%, transparent) !important;
+        }
+        #tab-content .resolve-input:focus { border-color: var(--tab-accent) !important; box-shadow: 0 0 0 1px var(--tab-accent); }
     </style>
 </head>
 <body class="bg-resolve-bg text-resolve-text font-sans antialiased min-h-screen flex flex-col select-none transition-colors duration-200">
@@ -229,6 +259,7 @@
                         <label class="block text-[10px] font-bold text-resolve-muted uppercase tracking-wider mb-1">Shape</label>
                         <select id="input-shape" class="w-full resolve-input px-2 py-1.5 rounded text-xs cursor-pointer font-medium">
                             <option value="rectangle">Rectangle</option>
+                            <option value="rounded_rectangle">Rounded Rectangle</option>
                             <option value="circle">Circle / Avatar</option>
                         </select>
                     </div>
@@ -239,6 +270,7 @@
                             <option value="solid">Solid Color</option>
                             <option value="gradient">Gradient</option>
                             <option value="uv_grid">UV Grid Pattern</option>
+                            <option value="image">Image</option>
                         </select>
                     </div>
 
@@ -249,6 +281,15 @@
                             <input type="text" id="input-hex-text" value="#FFFFFF" class="w-full resolve-input px-2 py-1 rounded font-mono text-[11px] font-bold uppercase">
                         </div>
                     </div>
+                </div>
+
+                <div id="rounded-controls" class="hidden p-2 bg-resolve-panel rounded border border-resolve-border">
+                    <label for="input-corner-radius" class="block text-[9px] font-bold text-resolve-muted uppercase">Corner radius (px)</label>
+                    <div class="flex items-center gap-3 mt-1">
+                        <input id="slider-corner-radius" type="range" min="0" max="540" step="1" value="64" aria-label="Corner radius pixels" oninput="setCornerRadius(this.value)" class="flex-1 min-w-0 accent-resolve-accent">
+                        <input id="input-corner-radius" type="number" min="0" max="540" step="1" value="64" oninput="if(this.value !== '') setCornerRadius(this.value)" onchange="setCornerRadius(this.value)" class="w-24 resolve-input px-2 py-1 rounded font-mono text-xs">
+                    </div>
+                    <p class="text-[10px] text-resolve-muted mt-1">Applies to all four corners. Maximum: half the shorter side.</p>
                 </div>
 
                 <!-- Gradient Controls -->
@@ -292,6 +333,36 @@
                     </div>
                 </div>
 
+                <div id="image-controls" class="hidden space-y-2 p-2 bg-resolve-panel rounded border border-resolve-border">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
+                        <div class="min-w-0">
+                            <label for="input-image-file" class="block text-[9px] font-bold text-resolve-muted uppercase">Upload Image</label>
+                            <input id="input-image-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif,image/bmp" onchange="loadImageFile(this)" class="w-full min-w-0 resolve-input px-2 py-1 rounded text-xs">
+                        </div>
+                        <div class="min-w-0">
+                            <label for="input-image-background" class="block text-[9px] font-bold text-resolve-muted uppercase">Shape background</label>
+                            <select id="input-image-background" onchange="updateConsolePreview()" class="w-full resolve-input px-2 py-1 rounded text-xs">
+                                <option value="transparent">Transparent</option>
+                                <option value="solid">Solid</option>
+                            </select>
+                        </div>
+                        <div id="image-background-color-box" class="hidden">
+                            <label for="input-image-background-color" class="block text-[9px] font-bold text-resolve-muted uppercase">Background color</label>
+                            <div class="flex items-center space-x-1.5">
+                                <input id="input-image-background-color" type="color" value="#ffffff" oninput="syncImageBackgroundColor('picker')" class="w-8 h-7 shrink-0 bg-transparent rounded cursor-pointer border border-resolve-border">
+                                <input id="input-image-background-hex" type="text" value="#FFFFFF" aria-label="Background color HEX" oninput="syncImageBackgroundColor('text')" onchange="syncImageBackgroundColor('commit')" class="w-full min-w-0 resolve-input px-2 py-1 rounded font-mono text-[11px] font-bold uppercase">
+                            </div>
+                        </div>
+                    </div>
+                    <p id="image-status" class="text-[10px] text-resolve-muted break-words" role="status">Choose an image. It stays on your device.</p>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div><label for="input-image-x" class="block text-[9px] font-bold text-resolve-muted uppercase">X offset (px)</label><input id="input-image-x" type="number" value="0" step="1" oninput="updateImagePlacement('x', this.value)" onchange="commitImagePlacement('x')" class="w-full resolve-input px-2 py-1 rounded font-mono text-xs"><input id="slider-image-x" type="range" min="-1080" max="1080" value="0" step="1" aria-label="X offset pixels" oninput="updateImagePlacement('x', this.value, true)" class="w-full accent-resolve-accent mt-2"></div>
+                        <div><label for="input-image-y" class="block text-[9px] font-bold text-resolve-muted uppercase">Y offset (px)</label><input id="input-image-y" type="number" value="0" step="1" oninput="updateImagePlacement('y', this.value)" onchange="commitImagePlacement('y')" class="w-full resolve-input px-2 py-1 rounded font-mono text-xs"><input id="slider-image-y" type="range" min="-1080" max="1080" value="0" step="1" aria-label="Y offset pixels" oninput="updateImagePlacement('y', this.value, true)" class="w-full accent-resolve-accent mt-2"></div>
+                        <div><label for="input-image-scale" class="block text-[9px] font-bold text-resolve-muted uppercase">Scale (%)</label><input id="input-image-scale" type="number" min="1" max="1000" value="100" step="1" oninput="updateImagePlacement('scale', this.value)" onchange="commitImagePlacement('scale')" class="w-full resolve-input px-2 py-1 rounded font-mono text-xs"><input id="slider-image-scale" type="range" min="1" max="1000" value="100" step="1" aria-label="Image scale percent" oninput="updateImagePlacement('scale', this.value, true)" class="w-full accent-resolve-accent mt-2"></div>
+                    </div>
+                    <div class="flex items-center justify-between gap-2"><p class="text-[10px] text-resolve-muted">100% fills the shape. X moves right; Y moves down. Uncovered areas use the shape background.</p><button onclick="resetImagePlacement()" class="resolve-btn px-2 py-1 rounded text-xs text-resolve-muted whitespace-nowrap">Reset position</button></div>
+                </div>
+
                 <!-- Action Buttons -->
                 <div class="flex items-center justify-between pt-2">
                     <!-- Item 1: Renamed label -->
@@ -318,7 +389,7 @@
 
                     <div class="absolute bottom-2 right-2 bg-resolve-bg/90 border border-resolve-border px-2 py-1 rounded text-[10px] font-mono text-gray-300 shadow flex items-center space-x-2">
                         <span id="preview-circle-metrics" class="hidden text-amber-400 font-semibold"></span>
-                        <span id="preview-dimensions-tag">1080 × 1080 px</span>
+
                     </div>
                 </div>
             </div>
@@ -341,7 +412,7 @@
                             <option value="dark" selected>Dark Theme</option>
                             <option value="light">Light Theme</option>
                             <option value="slate">Slate Theme</option>
-                            <option value="custom">Custom Color Override</option>
+                            <option value="custom">Custom</option>
                         </select>
                     </div>
                     <div>
@@ -359,26 +430,32 @@
                 <div id="card-custom-colors-box" class="hidden w-full md:w-1/3 flex items-center gap-2">
                     <div class="flex-1">
                         <label class="block text-[10px] font-bold text-resolve-muted uppercase tracking-wider mb-1">Card BG</label>
-                        <input type="color" id="card-bg-custom" value="#202025" oninput="applyCardTheme()" class="w-full h-8 bg-transparent rounded cursor-pointer border border-resolve-border">
+                        <div class="flex items-center space-x-1.5">
+                            <input type="color" id="card-bg-custom" value="#202025" oninput="syncCardColor('card-bg-custom', 'picker')" class="w-8 h-7 shrink-0 bg-transparent rounded cursor-pointer border border-resolve-border">
+                            <input type="text" id="card-bg-custom-hex" value="#202025" aria-label="Card background HEX" oninput="syncCardColor('card-bg-custom', 'text')" onchange="syncCardColor('card-bg-custom', 'commit')" class="w-full min-w-0 resolve-input px-2 py-1 rounded font-mono text-[11px] font-bold uppercase">
+                        </div>
                     </div>
                     <div class="flex-1">
                         <label class="block text-[10px] font-bold text-resolve-muted uppercase tracking-wider mb-1">Card Text</label>
-                        <input type="color" id="card-text-custom" value="#FFFFFF" oninput="applyCardTheme()" class="w-full h-8 bg-transparent rounded cursor-pointer border border-resolve-border">
+                        <div class="flex items-center space-x-1.5">
+                            <input type="color" id="card-text-custom" value="#FFFFFF" oninput="syncCardColor('card-text-custom', 'picker')" class="w-8 h-7 shrink-0 bg-transparent rounded cursor-pointer border border-resolve-border">
+                            <input type="text" id="card-text-custom-hex" value="#FFFFFF" aria-label="Card text HEX" oninput="syncCardColor('card-text-custom', 'text')" onchange="syncCardColor('card-text-custom', 'commit')" class="w-full min-w-0 resolve-input px-2 py-1 rounded font-mono text-[11px] font-bold uppercase">
+                        </div>
                     </div>
                 </div>
 
                 <div class="flex items-center gap-2 w-full md:w-auto justify-end">
-                    <button onclick="copyGuidelineImage()" class="resolve-btn px-4 py-2 rounded text-xs font-bold text-gray-200 hover:text-white flex items-center gap-1.5 shadow">
-                        <i class="fa-regular fa-copy text-amber-400"></i> Copy Image Card
+                    <button id="copy-card-button" onclick="copyGuidelineImage()" class="resolve-btn px-4 py-2 rounded text-xs font-bold text-gray-200 hover:text-white flex items-center gap-1.5 shadow">
+                        <i class="fa-regular fa-copy text-amber-400"></i> Copy
                     </button>
                     <button onclick="exportGuidelinePNG()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded text-xs font-bold flex items-center gap-1.5 shadow">
-                        <i class="fa-solid fa-file-export"></i> Export Image Card
+                        <i class="fa-solid fa-file-export"></i> Export
                     </button>
                 </div>
             </div>
 
             <!-- Card Capture Preview Area (Item 7: Standard dark background independent of Global Light/Dark mode) -->
-            <div class="flex justify-center bg-[#121214] p-6 rounded-lg border border-resolve-border">
+            <div id="guideline-preview-stage" class="flex justify-center bg-[#121214] p-6 rounded-lg border border-resolve-border">
                 <div id="guideline-card-preview" class="w-full max-w-xl border border-resolve-border rounded-xl p-5 shadow-2xl font-mono transition-colors duration-200 flex flex-col">
                     
                     <div id="card-header-zone" class="flex items-center justify-between mb-3 border-b border-resolve-border pb-2">
@@ -423,6 +500,7 @@
             <button onclick="switchTab('cinema')" id="tab-cinema" class="tab-btn px-3.5 py-2.5 rounded-t text-xs font-bold flex items-center gap-2 border-b-2 border-transparent hover:bg-resolve-panel transition text-brand-cinema">
                 <i class="fa-solid fa-film text-brand-cinema"></i> Cinema & Video
             </button>
+            <button onclick="switchTab('youtube')" id="tab-youtube" class="tab-btn px-3.5 py-2.5 rounded-t text-xs font-bold flex items-center gap-2 border-b-2 border-transparent hover:bg-resolve-panel transition text-red-500"><i class="fa-brands fa-youtube"></i> YouTube</button>
             <button onclick="switchTab('facebook')" id="tab-facebook" class="tab-btn px-3.5 py-2.5 rounded-t text-xs font-bold flex items-center gap-2 border-b-2 border-transparent hover:bg-resolve-panel transition text-brand-facebook">
                 <i class="fa-brands fa-facebook text-brand-facebook"></i> Facebook
             </button>
@@ -472,193 +550,1953 @@
 
     <script>
         const PLATFORM_DATA = {
-            cinema: {
-                title: "Cinema & Video Standards",
-                icon: "fa-solid fa-film",
-                color: "#d4af37",
-                guideLink: "https://www.dcimovies.com/specifications/",
-                guideLabel: "DCI Specifications",
-                categories: [
+    "cinema": {
+        "title": "Cinema & Video Standards",
+        "icon": "fa-solid fa-film",
+        "color": "#d4af37",
+        "guideLink": "https://www.dcimovies.com/specifications/",
+        "guideLabel": "DCI Specifications",
+        "categories": [
+            {
+                "category": "Cinema & Production Formats",
+                "icon": "fa-solid fa-video",
+                "items": [
                     {
-                        category: "Cinema & Production Formats",
-                        icon: "fa-solid fa-video",
-                        items: [
-                            { name: "Anamorphic Widescreen", w: 3840, h: 1608, ratio: "21:9", dec: "2.39", shape: "rectangle" },
-                            { name: "DCI 4K Full Container", w: 4096, h: 2160, ratio: "1.90:1", dec: "1.90", shape: "rectangle" },
-                            { name: "Standard Ultra HD (16:9)", w: 3840, h: 2160, ratio: "16:9", dec: "1.78", shape: "rectangle" },
-                            { name: "Full HD Video (16:9)", w: 1920, h: 1080, ratio: "16:9", dec: "1.78", shape: "rectangle" },
-                            { name: "IMAX Digital Frame", w: 3840, h: 2685, ratio: "1.43:1", dec: "1.43", shape: "rectangle" },
-                            { name: "Classic Broadcast (4:3)", w: 1440, h: 1080, ratio: "4:3", dec: "1.33", shape: "rectangle" }
-                        ]
-                    }
-                ]
-            },
-            facebook: {
-                title: "Facebook Specs & Ad Guidelines",
-                icon: "fa-brands fa-facebook",
-                color: "#1877f2",
-                guideLink: "https://www.facebook.com/business/ads-guide/update",
-                guideLabel: "Facebook Ads Guide",
-                categories: [
-                    {
-                        category: "Posts & Stories",
-                        icon: "fa-regular fa-newspaper",
-                        items: [
-                            { name: "Square Post", w: 1200, h: 1200, ratio: "1:1", dec: "1.00", shape: "rectangle" },
-                            { name: "Landscape Post", w: 1200, h: 630, ratio: "1.91:1", dec: "1.91", shape: "rectangle" },
-                            { name: "Portrait Post", w: 1080, h: 1350, ratio: "4:5", dec: "0.80", shape: "rectangle" },
-                            { name: "Facebook Story", w: 1080, h: 1920, ratio: "9:16", dec: "0.56", shape: "rectangle" }
-                        ]
+                        "name": "Anamorphic Widescreen",
+                        "w": 3840,
+                        "h": 1608,
+                        "ratio": "2.39:1",
+                        "dec": "2.39",
+                        "shape": "rectangle",
+                        "note": "Wide cinematic composition for trailers, music videos, and narrative edits."
                     },
                     {
-                        category: "General & Profiles",
-                        icon: "fa-solid fa-address-book",
-                        items: [
-                            { name: "Profile Picture", w: 720, h: 720, ratio: "1:1", dec: "1.00", shape: "circle" },
-                            { name: "Business Page Cover", w: 1200, h: 674, ratio: "16:9", dec: "1.78", shape: "rectangle" },
-                            { name: "Event Cover Image", w: 1200, h: 628, ratio: "1.91:1", dec: "1.91", shape: "rectangle" },
-                            { name: "Profile Cover Photo", w: 851, h: 315, ratio: "2.7:1", dec: "2.70", shape: "rectangle" }
-                        ]
-                    }
-                ]
-            },
-            instagram: {
-                title: "Instagram Post & Reel Formats",
-                icon: "fa-brands fa-instagram",
-                color: "#e4405f",
-                guideLink: "https://www.google.com/search?q=Instagram+image+and+video+format+specifications+guide",
-                guideLabel: "Instagram Spec Search",
-                categories: [
-                    {
-                        category: "Post Formats",
-                        icon: "fa-regular fa-image",
-                        items: [
-                            { name: "Square Post", w: 1080, h: 1080, ratio: "1:1", dec: "1.00", shape: "rectangle" },
-                            { name: "Landscape Post", w: 1080, h: 566, ratio: "1.91:1", dec: "1.91", shape: "rectangle" },
-                            { name: "Portrait Post", w: 1080, h: 1350, ratio: "4:5", dec: "0.80", shape: "rectangle" }
-                        ]
+                        "name": "DCI 4K Full Container",
+                        "w": 4096,
+                        "h": 2160,
+                        "ratio": "1.90:1",
+                        "dec": "1.90",
+                        "shape": "rectangle",
+                        "note": "Full 4K cinema frame for mastering layouts and checking image placement."
                     },
                     {
-                        category: "Reels & Avatars",
-                        icon: "fa-solid fa-video",
-                        items: [
-                            { name: "Full Screen Reel", w: 1080, h: 1920, ratio: "9:16", dec: "0.56", shape: "rectangle" },
-                            { name: "Story (+ADS)", w: 1080, h: 1920, ratio: "9:16", dec: "0.56", shape: "rectangle" },
-                            { name: "Profile Picture", w: 320, h: 320, ratio: "1:1", dec: "1.00", shape: "circle" },
-                            { name: "Highlight Icon", w: 400, h: 400, ratio: "1:1", dec: "1.00", shape: "circle" }
-                        ]
-                    }
-                ]
-            },
-            tiktok: {
-                title: "TikTok Creation & Resolution Guide",
-                icon: "fa-brands fa-tiktok",
-                color: "#fe2c55",
-                guideLink: "https://www.google.com/search?q=TikTok+video+format+and+resolution+specifications+guide",
-                guideLabel: "TikTok Spec Search",
-                categories: [
-                    {
-                        category: "Video & Live Formats",
-                        icon: "fa-solid fa-mobile-screen-button",
-                        items: [
-                            { name: "Vertical Video (In-Feed)", w: 1080, h: 1920, ratio: "9:16", dec: "0.56", shape: "rectangle" },
-                            { name: "TikTok Story Video", w: 1080, h: 1920, ratio: "9:16", dec: "0.56", shape: "rectangle" },
-                            { name: "Carousel Post Photo", w: 1080, h: 1920, ratio: "9:16", dec: "0.56", shape: "rectangle" }
-                        ]
+                        "name": "Standard Ultra HD (16:9)",
+                        "w": 3840,
+                        "h": 2160,
+                        "ratio": "16:9",
+                        "dec": "1.78",
+                        "shape": "rectangle",
+                        "note": "4K widescreen projects for television, streaming, and detailed video presentations."
                     },
                     {
-                        category: "Profile & Avatar",
-                        icon: "fa-regular fa-user",
-                        items: [
-                            { name: "Profile Photo Avatar", w: 200, h: 200, ratio: "1:1", dec: "1.00", shape: "circle" },
-                            { name: "Video Cover Thumbnail", w: 1080, h: 1920, ratio: "9:16", dec: "0.56", shape: "rectangle" }
-                        ]
-                    }
-                ]
-            },
-            twitter: {
-                title: "Twitter / X Media Standards",
-                icon: "fa-brands fa-x-twitter",
-                color: "#1da1f2",
-                guideLink: "https://www.google.com/search?q=X+Twitter+media+upload+image+and+video+specs",
-                guideLabel: "X Spec Search",
-                categories: [
-                    {
-                        category: "Feeds & Cards",
-                        icon: "fa-regular fa-images",
-                        items: [
-                            { name: "In-Stream Photo (16:9)", w: 1600, h: 900, ratio: "16:9", dec: "1.78", shape: "rectangle" },
-                            { name: "Square Image Post", w: 1080, h: 1080, ratio: "1:1", dec: "1.00", shape: "rectangle" },
-                            { name: "Portrait Image Post", w: 1080, h: 1350, ratio: "4:5", dec: "0.80", shape: "rectangle" },
-                            { name: "Web Card Image", w: 1200, h: 628, ratio: "1.91:1", dec: "1.91", shape: "rectangle" }
-                        ]
+                        "name": "Full HD Video (16:9)",
+                        "w": 1920,
+                        "h": 1080,
+                        "ratio": "16:9",
+                        "dec": "1.78",
+                        "shape": "rectangle",
+                        "note": "Everyday widescreen video for interviews, tutorials, presentations, and online delivery."
                     },
                     {
-                        category: "Header & Profile",
-                        icon: "fa-solid fa-id-card",
-                        items: [
-                            { name: "Profile Picture", w: 400, h: 400, ratio: "1:1", dec: "1.00", shape: "circle" },
-                            { name: "Header Banner", w: 1500, h: 500, ratio: "3:1", dec: "3.00", shape: "rectangle" }
-                        ]
-                    }
-                ]
-            },
-            dribbble: {
-                title: "Dribbble Shot Guidelines",
-                icon: "fa-brands fa-dribbble",
-                color: "#ea4c89",
-                guideLink: "https://www.google.com/search?q=Dribbble+shot+dimensions+and+image+upload+guidelines",
-                guideLabel: "Dribbble Spec Search",
-                categories: [
+                        "name": "IMAX Digital Frame",
+                        "w": 3840,
+                        "h": 2685,
+                        "ratio": "1.43:1",
+                        "dec": "1.43",
+                        "shape": "rectangle",
+                        "note": "Tall 1.43:1 composition study for large-format framing; this preset is not an IMAX delivery specification."
+                    },
                     {
-                        category: "Shots & Avatars",
-                        icon: "fa-solid fa-palette",
-                        items: [
-                            { name: "Standard Shot HD", w: 1600, h: 1200, ratio: "4:3", dec: "1.33", shape: "rectangle" },
-                            { name: "Shot Preview Square", w: 1200, h: 1200, ratio: "1:1", dec: "1.00", shape: "rectangle" },
-                            { name: "Profile Picture", w: 400, h: 400, ratio: "1:1", dec: "1.00", shape: "circle" },
-                            { name: "Team Avatar", w: 1200, h: 1200, ratio: "1:1", dec: "1.00", shape: "circle" }
-                        ]
+                        "name": "Classic Broadcast (4:3)",
+                        "w": 1440,
+                        "h": 1080,
+                        "ratio": "4:3",
+                        "dec": "1.33",
+                        "shape": "rectangle",
+                        "note": "Classic television framing for archival edits, retro graphics, and 4:3 compositions."
                     }
                 ]
             },
-            behance: {
-                title: "Behance Formatting & Covers",
-                icon: "fa-brands fa-behance",
-                color: "#1769ff",
-                guideLink: "https://www.google.com/search?q=Behance+project+formatting+and+cover+image+specs",
-                guideLabel: "Behance Spec Search",
-                categories: [
+            {
+                "category": "Additional Production Canvases",
+                "icon": "fa-solid fa-film",
+                "items": [
                     {
-                        category: "Projects & Banners",
-                        icon: "fa-solid fa-box-archive",
-                        items: [
-                            { name: "Project Cover Image", w: 4048, h: 2304, ratio: "16:9", dec: "1.78", shape: "rectangle" },
-                            { name: "Project Content View", w: 1400, h: 1050, ratio: "4:3", dec: "1.33", shape: "rectangle" },
-                            { name: "Profile Banner", w: 1400, h: 425, ratio: "16:5", dec: "3.29", shape: "rectangle" },
-                            { name: "Profile Avatar", w: 500, h: 500, ratio: "1:1", dec: "1.00", shape: "circle" }
-                        ]
+                        "name": "HD 720p",
+                        "w": 1280,
+                        "h": 720,
+                        "ratio": "16:9",
+                        "dec": "1.78",
+                        "shape": "rectangle",
+                        "note": "Compact HD layouts for lightweight video, stream graphics, and review copies."
+                    },
+                    {
+                        "name": "QHD 1440p",
+                        "w": 2560,
+                        "h": 1440,
+                        "ratio": "16:9",
+                        "dec": "1.78",
+                        "shape": "rectangle",
+                        "note": "Detailed widescreen layouts for desktop screen recordings and gaming videos."
+                    },
+                    {
+                        "name": "UHD 8K",
+                        "w": 7680,
+                        "h": 4320,
+                        "ratio": "16:9",
+                        "dec": "1.78",
+                        "shape": "rectangle",
+                        "note": "High-resolution compositions for large displays, detailed masters, and reframing into smaller outputs."
+                    },
+                    {
+                        "name": "DCI 2K Container",
+                        "w": 2048,
+                        "h": 1080,
+                        "ratio": "256:135",
+                        "dec": "1.90",
+                        "shape": "rectangle",
+                        "note": "Full 2K cinema frame for mastering layouts and framing checks."
+                    },
+                    {
+                        "name": "DCI 2K Flat",
+                        "w": 1998,
+                        "h": 1080,
+                        "ratio": "37:20",
+                        "dec": "1.85",
+                        "shape": "rectangle",
+                        "note": "1.85:1 cinema composition for flat-format films and theatrical graphics."
+                    },
+                    {
+                        "name": "DCI 2K Scope",
+                        "w": 2048,
+                        "h": 858,
+                        "ratio": "1024:429",
+                        "dec": "2.39",
+                        "shape": "rectangle",
+                        "note": "Wide 2.39:1 cinema composition for scope-format films and trailers."
+                    },
+                    {
+                        "name": "DCI 4K Flat",
+                        "w": 3996,
+                        "h": 2160,
+                        "ratio": "37:20",
+                        "dec": "1.85",
+                        "shape": "rectangle",
+                        "note": "High-resolution 1.85:1 cinema composition for flat-format films and theatrical graphics."
+                    },
+                    {
+                        "name": "DCI 4K Scope",
+                        "w": 4096,
+                        "h": 1716,
+                        "ratio": "1024:429",
+                        "dec": "2.39",
+                        "shape": "rectangle",
+                        "note": "High-resolution 2.39:1 cinema composition for scope-format films and trailers."
+                    },
+                    {
+                        "name": "Vertical Full HD",
+                        "w": 1080,
+                        "h": 1920,
+                        "ratio": "9:16",
+                        "dec": "0.56",
+                        "shape": "rectangle",
+                        "note": "Full-screen mobile compositions for short videos, vertical promos, and stories."
+                    },
+                    {
+                        "name": "Square Full HD",
+                        "w": 1080,
+                        "h": 1080,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "Square compositions for feed videos, looping animations, and product promos."
                     }
                 ]
-            },
-            paper: {
-                title: "ISO 216 Print Standards",
-                icon: "fa-solid fa-file-lines",
-                color: "#6366f1",
-                guideLink: "https://en.wikipedia.org/wiki/ISO_216",
-                guideLabel: "ISO 216 Guide",
-                categories: []
             }
-        };
+        ]
+    },
+    "youtube": {
+        "title": "YouTube Creator Guidelines",
+        "icon": "fa-brands fa-youtube",
+        "color": "#FF0033",
+        "guideLink": "https://support.google.com/youtube/answer/10456525?hl=en",
+        "guideLabel": "YouTube Creator Guidelines",
+        "categories": [
+            {
+                "category": "Thumbnails & Podcasts",
+                "icon": "fa-regular fa-image",
+                "source": "https://support.google.com/youtube/answer/72431?hl=en",
+                "items": [
+                    {
+                        "name": "Video Thumbnail — Recommended",
+                        "w": 3840,
+                        "h": 2160,
+                        "ratio": "16:9",
+                        "dec": "1.78",
+                        "shape": "rectangle",
+                        "note": "Official 16:9 recommendation; minimum width 640 px. JPG/PNG. Desktop max 50 MB; mobile max 2 MB."
+                    },
+                    {
+                        "name": "Shorts Thumbnail — Recommended",
+                        "w": 2160,
+                        "h": 3840,
+                        "ratio": "9:16",
+                        "dec": "0.56",
+                        "shape": "rectangle",
+                        "note": "Official 9:16 recommendation; minimum height 640 px. Desktop upload in Studio; max 50 MB."
+                    },
+                    {
+                        "name": "Playlist Cover — Working Canvas",
+                        "w": 3840,
+                        "h": 2160,
+                        "ratio": "16:9",
+                        "dec": "1.78",
+                        "shape": "rectangle",
+                        "note": "16:9 working canvas. See the playlist thumbnail guide; this is not a separate official pixel requirement."
+                    },
+                    {
+                        "name": "Podcast Cover",
+                        "w": 1280,
+                        "h": 1280,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "Recommended square podcast artwork. Desktop max 50 MB; mobile podcast max 10 MB."
+                    }
+                ]
+            },
+            {
+                "category": "Shorts & Vertical Video",
+                "icon": "fa-solid fa-mobile-screen",
+                "source": "https://support.google.com/youtube/answer/15424877?hl=en",
+                "items": [
+                    {
+                        "name": "Shorts — Full HD Working Canvas",
+                        "w": 1080,
+                        "h": 1920,
+                        "ratio": "9:16",
+                        "dec": "0.56",
+                        "shape": "rectangle",
+                        "note": "Practical 9:16 canvas. Square or vertical videos up to 3 minutes can qualify as Shorts."
+                    },
+                    {
+                        "name": "Shorts — Square Working Canvas",
+                        "w": 1080,
+                        "h": 1080,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "Practical 1:1 alternative; not a required upload resolution."
+                    },
+                    {
+                        "name": "Vertical Video — 4K Working Canvas",
+                        "w": 2160,
+                        "h": 3840,
+                        "ratio": "9:16",
+                        "dec": "0.56",
+                        "shape": "rectangle",
+                        "note": "9:16 production canvas; player adapts to the video aspect ratio."
+                    }
+                ]
+            },
+            {
+                "category": "Landscape Video Resolutions",
+                "icon": "fa-solid fa-film",
+                "source": "https://support.google.com/youtube/answer/6375112?hl=en",
+                "items": [
+                    {
+                        "name": "HD / Full HD / QHD",
+                        "w": 1920,
+                        "h": 1080,
+                        "ratio": "16:9",
+                        "dec": "1.78",
+                        "shape": "rectangle",
+                        "note": "YouTube listed resolution for 16:9 delivery. Avoid adding black bars.",
+                        "variants": [
+                            {
+                                "name": "Video 1080p",
+                                "w": 1920,
+                                "h": 1080,
+                                "ratio": "16:9",
+                                "dec": "1.78",
+                                "shape": "rectangle",
+                                "note": "YouTube listed resolution for 16:9 delivery. Avoid adding black bars."
+                            },
+                            {
+                                "name": "Video 720p",
+                                "w": 1280,
+                                "h": 720,
+                                "ratio": "16:9",
+                                "dec": "1.78",
+                                "shape": "rectangle",
+                                "note": "YouTube listed resolution for 16:9 delivery. Avoid adding black bars."
+                            },
+                            {
+                                "name": "Video 1440p",
+                                "w": 2560,
+                                "h": 1440,
+                                "ratio": "16:9",
+                                "dec": "1.78",
+                                "shape": "rectangle",
+                                "note": "YouTube listed resolution for 16:9 delivery. Avoid adding black bars."
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Ultra HD — 4K / 8K",
+                        "w": 3840,
+                        "h": 2160,
+                        "ratio": "16:9",
+                        "dec": "1.78",
+                        "shape": "rectangle",
+                        "note": "YouTube listed resolution for 16:9 delivery. Avoid adding black bars.",
+                        "variants": [
+                            {
+                                "name": "Video 4K",
+                                "w": 3840,
+                                "h": 2160,
+                                "ratio": "16:9",
+                                "dec": "1.78",
+                                "shape": "rectangle",
+                                "note": "YouTube listed resolution for 16:9 delivery. Avoid adding black bars."
+                            },
+                            {
+                                "name": "Video 8K",
+                                "w": 7680,
+                                "h": 4320,
+                                "ratio": "16:9",
+                                "dec": "1.78",
+                                "shape": "rectangle",
+                                "note": "YouTube listed resolution for 16:9 delivery. Avoid adding black bars."
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Standard Definition",
+                        "w": 854,
+                        "h": 480,
+                        "ratio": "854:480",
+                        "dec": "1.78",
+                        "shape": "rectangle",
+                        "note": "YouTube listed resolution for 16:9 delivery. Avoid adding black bars.",
+                        "variants": [
+                            {
+                                "name": "Video 480p",
+                                "w": 854,
+                                "h": 480,
+                                "ratio": "854:480",
+                                "dec": "1.78",
+                                "shape": "rectangle",
+                                "note": "YouTube listed resolution for 16:9 delivery. Avoid adding black bars."
+                            },
+                            {
+                                "name": "Video 360p",
+                                "w": 640,
+                                "h": 360,
+                                "ratio": "16:9",
+                                "dec": "1.78",
+                                "shape": "rectangle",
+                                "note": "YouTube listed resolution for 16:9 delivery. Avoid adding black bars."
+                            },
+                            {
+                                "name": "Video 240p",
+                                "w": 426,
+                                "h": 240,
+                                "ratio": "426:240",
+                                "dec": "1.77",
+                                "shape": "rectangle",
+                                "note": "YouTube listed resolution for 16:9 delivery. Avoid adding black bars."
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "category": "Channel Branding",
+                "icon": "fa-solid fa-palette",
+                "source": "https://support.google.com/youtube/answer/10456525?hl=en",
+                "items": [
+                    {
+                        "name": "Channel Banner",
+                        "w": 2560,
+                        "h": 1440,
+                        "ratio": "16:9",
+                        "dec": "1.78",
+                        "shape": "rectangle",
+                        "note": "Recommended TV canvas. Max 6 MB; cropped differently across devices.",
+                        "variants": [
+                            {
+                                "name": "Channel Banner — Recommended",
+                                "w": 2560,
+                                "h": 1440,
+                                "ratio": "16:9",
+                                "dec": "1.78",
+                                "shape": "rectangle",
+                                "note": "Recommended TV canvas. Max 6 MB; cropped differently across devices."
+                            },
+                            {
+                                "name": "Channel Banner — Minimum",
+                                "w": 2048,
+                                "h": 1152,
+                                "ratio": "16:9",
+                                "dec": "1.78",
+                                "shape": "rectangle",
+                                "note": "Minimum upload. Keep text and logos in the centered 1235 × 338 px safe area."
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Banner Safe Area — Minimum Canvas",
+                        "w": 1235,
+                        "h": 338,
+                        "ratio": "1235:338",
+                        "dec": "3.65",
+                        "shape": "rectangle",
+                        "note": "Layout reference only, inside a 2048 × 1152 banner; not a standalone banner upload."
+                    },
+                    {
+                        "name": "Profile Picture — Working Canvas",
+                        "w": 800,
+                        "h": 800,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "circle",
+                        "note": "Practical working size, not an official minimum. Displays at 98 × 98; max 15 MB. JPG, PNG, BMP or non-animated GIF."
+                    },
+                    {
+                        "name": "Video Watermark — Minimum",
+                        "w": 150,
+                        "h": 150,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "Square; at least 150 × 150 px, under 1 MB."
+                    }
+                ]
+            },
+            {
+                "category": "Posts & End Screens",
+                "icon": "fa-regular fa-window-maximize",
+                "source": "https://support.google.com/youtube/answer/7124474?hl=en",
+                "items": [
+                    {
+                        "name": "Post Image — Square Working Canvas",
+                        "w": 1080,
+                        "h": 1080,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "YouTube suggests 1:1; pixel size is a working choice. Up to 16 MB. JPG, PNG, GIF or WEBP."
+                    },
+                    {
+                        "name": "Image Poll — Working Canvas",
+                        "w": 1080,
+                        "h": 1080,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "Square working canvas for image answers; no fixed pixel size specified in the post guide."
+                    },
+                    {
+                        "name": "End Screen Canvas",
+                        "w": 1920,
+                        "h": 1080,
+                        "ratio": "16:9",
+                        "dec": "1.78",
+                        "shape": "rectangle",
+                        "note": "Match your video resolution. Add elements in Studio during the last 5–20 seconds; video must be at least 25 seconds.",
+                        "variants": [
+                            {
+                                "name": "End Screen — Full HD Working Canvas",
+                                "w": 1920,
+                                "h": 1080,
+                                "ratio": "16:9",
+                                "dec": "1.78",
+                                "shape": "rectangle",
+                                "note": "Match your video resolution. Add elements in Studio during the last 5–20 seconds; video must be at least 25 seconds."
+                            },
+                            {
+                                "name": "End Screen — 4K Working Canvas",
+                                "w": 3840,
+                                "h": 2160,
+                                "ratio": "16:9",
+                                "dec": "1.78",
+                                "shape": "rectangle",
+                                "note": "Match the 4K video canvas; add interactive elements in Studio."
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "category": "Live & Additional Creator Canvases",
+                "icon": "fa-solid fa-tower-broadcast",
+                "source": "https://support.google.com/youtube/answer/6375112?hl=en",
+                "items": [
+                    {
+                        "name": "Live Landscape — Full HD",
+                        "w": 1920,
+                        "h": 1080,
+                        "ratio": "16:9",
+                        "dec": "1.78",
+                        "shape": "rectangle",
+                        "note": "Working stream canvas; encoder and bitrate settings are separate."
+                    },
+                    {
+                        "name": "Live Vertical — Full HD",
+                        "w": 1080,
+                        "h": 1920,
+                        "ratio": "9:16",
+                        "dec": "0.56",
+                        "shape": "rectangle",
+                        "note": "Working vertical stream canvas; confirm live feature availability."
+                    },
+                    {
+                        "name": "Live Thumbnail — Recommended",
+                        "w": 3840,
+                        "h": 2160,
+                        "ratio": "16:9",
+                        "dec": "1.78",
+                        "shape": "rectangle",
+                        "note": "Uses the video thumbnail canvas; verify upload file-size limits."
+                    }
+                ]
+            },
+            {
+                "category": "Membership Badges & Emoji",
+                "icon": "fa-regular fa-star",
+                "source": "https://support.google.com/youtube/answer/7544492?hl=en",
+                "items": [
+                    {
+                        "name": "Membership Badge — Minimum",
+                        "w": 32,
+                        "h": 32,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "JPEG/PNG, under 1 MB. Displays at 14 × 14 in comments/posts or 16 × 16 in live chat."
+                    },
+                    {
+                        "name": "Member Emoji",
+                        "w": 48,
+                        "h": 48,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "Preferred size; JPEG/PNG/GIF, under 1 MB. GIFs display as still images.",
+                        "variants": [
+                            {
+                                "name": "Member Emoji — Preferred",
+                                "w": 48,
+                                "h": 48,
+                                "ratio": "1:1",
+                                "dec": "1.00",
+                                "shape": "rectangle",
+                                "note": "Preferred size; JPEG/PNG/GIF, under 1 MB. GIFs display as still images."
+                            },
+                            {
+                                "name": "Member Emoji — Maximum",
+                                "w": 480,
+                                "h": 480,
+                                "ratio": "1:1",
+                                "dec": "1.00",
+                                "shape": "rectangle",
+                                "note": "Upper end of the documented 48–480 px size range; under 1 MB."
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    "facebook": {
+        "title": "Facebook Specs & Ad Guidelines",
+        "icon": "fa-brands fa-facebook",
+        "color": "#1877f2",
+        "guideLink": "https://www.facebook.com/business/ads-guide",
+        "guideLabel": "Platform Guide",
+        "categories": [
+            {
+                "category": "Posts & Stories",
+                "icon": "fa-regular fa-newspaper",
+                "items": [
+                    {
+                        "name": "Square Post",
+                        "w": 1200,
+                        "h": 1200,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Landscape Post",
+                        "w": 1200,
+                        "h": 630,
+                        "ratio": "40:21",
+                        "dec": "1.90",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Portrait Post",
+                        "w": 1080,
+                        "h": 1350,
+                        "ratio": "4:5",
+                        "dec": "0.80",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Facebook Story",
+                        "w": 1080,
+                        "h": 1920,
+                        "ratio": "9:16",
+                        "dec": "0.56",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    }
+                ]
+            },
+            {
+                "category": "General & Profiles",
+                "icon": "fa-solid fa-address-book",
+                "items": [
+                    {
+                        "name": "Profile Picture",
+                        "w": 720,
+                        "h": 720,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "circle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Business Page Cover",
+                        "w": 1200,
+                        "h": 674,
+                        "ratio": "600:337",
+                        "dec": "1.78",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Event Cover",
+                        "w": 1200,
+                        "h": 628,
+                        "ratio": "300:157",
+                        "dec": "1.91",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing.",
+                        "variants": [
+                            {
+                                "name": "Event Cover Image",
+                                "w": 1200,
+                                "h": 628,
+                                "ratio": "300:157",
+                                "dec": "1.91",
+                                "shape": "rectangle",
+                                "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                            },
+                            {
+                                "name": "Event Cover — Large Canvas",
+                                "w": 1920,
+                                "h": 1005,
+                                "ratio": "128:67",
+                                "dec": "1.91",
+                                "shape": "rectangle",
+                                "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Profile Cover Photo",
+                        "w": 851,
+                        "h": 315,
+                        "ratio": "851:315",
+                        "dec": "2.70",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    }
+                ]
+            },
+            {
+                "category": "Reels, Video & Live",
+                "icon": "fa-solid fa-video",
+                "source": "https://www.facebook.com/business/ads-guide",
+                "items": [
+                    {
+                        "name": "Facebook Reel",
+                        "w": 1080,
+                        "h": 1920,
+                        "ratio": "9:16",
+                        "dec": "0.56",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Landscape Video / Live",
+                        "w": 1920,
+                        "h": 1080,
+                        "ratio": "16:9",
+                        "dec": "1.78",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Square Video",
+                        "w": 1080,
+                        "h": 1080,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Portrait Feed Video",
+                        "w": 1080,
+                        "h": 1350,
+                        "ratio": "4:5",
+                        "dec": "0.80",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Video Thumbnail",
+                        "w": 1920,
+                        "h": 1080,
+                        "ratio": "16:9",
+                        "dec": "1.78",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    }
+                ]
+            },
+            {
+                "category": "Ads & Carousel Assets",
+                "icon": "fa-regular fa-images",
+                "source": "https://www.facebook.com/business/ads-guide",
+                "items": [
+                    {
+                        "name": "Feed Image Ad — Square",
+                        "w": 1080,
+                        "h": 1080,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Feed Image Ad — Portrait",
+                        "w": 1080,
+                        "h": 1350,
+                        "ratio": "4:5",
+                        "dec": "0.80",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Carousel Card — Square",
+                        "w": 1080,
+                        "h": 1080,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Story / Reel Ad",
+                        "w": 1080,
+                        "h": 1920,
+                        "ratio": "9:16",
+                        "dec": "0.56",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Link Ad — Landscape",
+                        "w": 1200,
+                        "h": 628,
+                        "ratio": "300:157",
+                        "dec": "1.91",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Marketplace Product — Square",
+                        "w": 1080,
+                        "h": 1080,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    }
+                ]
+            },
+            {
+                "category": "Additional Cover Canvases",
+                "icon": "fa-regular fa-images",
+                "source": "https://www.facebook.com/business/ads-guide",
+                "items": [
+                    {
+                        "name": "Group Cover — Working Canvas",
+                        "w": 1640,
+                        "h": 856,
+                        "ratio": "205:107",
+                        "dec": "1.92",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Page Cover — Wide Canvas",
+                        "w": 1640,
+                        "h": 624,
+                        "ratio": "205:78",
+                        "dec": "2.63",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    }
+                ]
+            }
+        ],
+        "presetNotice": "Working canvases are design starting points, not guaranteed upload requirements. Placement crops and availability vary. Official dimensions are identified in each note."
+    },
+    "instagram": {
+        "title": "Instagram Post & Reel Formats",
+        "icon": "fa-brands fa-instagram",
+        "color": "#e4405f",
+        "guideLink": "https://www.facebook.com/business/ads-guide",
+        "guideLabel": "Platform Guide",
+        "categories": [
+            {
+                "category": "Post Formats",
+                "icon": "fa-regular fa-image",
+                "items": [
+                    {
+                        "name": "Square Post",
+                        "w": 1080,
+                        "h": 1080,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Landscape Post",
+                        "w": 1080,
+                        "h": 566,
+                        "ratio": "540:283",
+                        "dec": "1.91",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Portrait Post",
+                        "w": 1080,
+                        "h": 1350,
+                        "ratio": "4:5",
+                        "dec": "0.80",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    }
+                ]
+            },
+            {
+                "category": "Reels & Avatars",
+                "icon": "fa-solid fa-video",
+                "items": [
+                    {
+                        "name": "Full Screen Reel",
+                        "w": 1080,
+                        "h": 1920,
+                        "ratio": "9:16",
+                        "dec": "0.56",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Story (+ADS)",
+                        "w": 1080,
+                        "h": 1920,
+                        "ratio": "9:16",
+                        "dec": "0.56",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Profile Picture",
+                        "w": 320,
+                        "h": 320,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "circle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Highlight Icon",
+                        "w": 400,
+                        "h": 400,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "circle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    }
+                ]
+            },
+            {
+                "category": "Carousel & Portrait Canvases",
+                "icon": "fa-regular fa-images",
+                "source": "https://www.facebook.com/business/ads-guide",
+                "items": [
+                    {
+                        "name": "Portrait Photo — 3:4 Canvas",
+                        "w": 1080,
+                        "h": 1440,
+                        "ratio": "3:4",
+                        "dec": "0.75",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Carousel Slide — Square",
+                        "w": 1080,
+                        "h": 1080,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Carousel Slide — 4:5",
+                        "w": 1080,
+                        "h": 1350,
+                        "ratio": "4:5",
+                        "dec": "0.80",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Carousel Slide — 3:4",
+                        "w": 1080,
+                        "h": 1440,
+                        "ratio": "3:4",
+                        "dec": "0.75",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Carousel Slide — Landscape",
+                        "w": 1080,
+                        "h": 566,
+                        "ratio": "540:283",
+                        "dec": "1.91",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    }
+                ]
+            },
+            {
+                "category": "Covers, Video & Ad Creatives",
+                "icon": "fa-solid fa-video",
+                "source": "https://www.facebook.com/business/ads-guide",
+                "items": [
+                    {
+                        "name": "Reel Cover — Full Canvas",
+                        "w": 1080,
+                        "h": 1920,
+                        "ratio": "9:16",
+                        "dec": "0.56",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Profile Grid — 3:4 Crop Study",
+                        "w": 1080,
+                        "h": 1440,
+                        "ratio": "3:4",
+                        "dec": "0.75",
+                        "shape": "rectangle",
+                        "note": "Crop reference only; inspect the profile-grid crop in Instagram."
+                    },
+                    {
+                        "name": "Feed Video — Square",
+                        "w": 1080,
+                        "h": 1080,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Feed Video — Portrait",
+                        "w": 1080,
+                        "h": 1350,
+                        "ratio": "4:5",
+                        "dec": "0.80",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Story Ad",
+                        "w": 1080,
+                        "h": 1920,
+                        "ratio": "9:16",
+                        "dec": "0.56",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Reel Ad",
+                        "w": 1080,
+                        "h": 1920,
+                        "ratio": "9:16",
+                        "dec": "0.56",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Feed Image Ad — Square",
+                        "w": 1080,
+                        "h": 1080,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Feed Image Ad — Portrait",
+                        "w": 1080,
+                        "h": 1350,
+                        "ratio": "4:5",
+                        "dec": "0.80",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Carousel Ad Card",
+                        "w": 1080,
+                        "h": 1080,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    }
+                ]
+            }
+        ],
+        "presetNotice": "Working canvases are design starting points, not guaranteed upload requirements. Placement crops and availability vary. Official dimensions are identified in each note."
+    },
+    "tiktok": {
+        "title": "TikTok Creation & Resolution Guide",
+        "icon": "fa-brands fa-tiktok",
+        "color": "#25F4EE",
+        "guideLink": "https://ads.tiktok.com/help/article/tiktok-auction-in-feed-ads",
+        "guideLabel": "Platform Guide",
+        "categories": [
+            {
+                "category": "Video & Live Formats",
+                "icon": "fa-solid fa-mobile-screen-button",
+                "items": [
+                    {
+                        "name": "Vertical Video (In-Feed)",
+                        "w": 1080,
+                        "h": 1920,
+                        "ratio": "9:16",
+                        "dec": "0.56",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "TikTok Story Video",
+                        "w": 1080,
+                        "h": 1920,
+                        "ratio": "9:16",
+                        "dec": "0.56",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Carousel Post Photo",
+                        "w": 1080,
+                        "h": 1920,
+                        "ratio": "9:16",
+                        "dec": "0.56",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    }
+                ]
+            },
+            {
+                "category": "Profile & Avatar",
+                "icon": "fa-regular fa-user",
+                "items": [
+                    {
+                        "name": "Profile Photo Avatar",
+                        "w": 200,
+                        "h": 200,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "circle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Video Cover Thumbnail",
+                        "w": 1080,
+                        "h": 1920,
+                        "ratio": "9:16",
+                        "dec": "0.56",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    }
+                ]
+            },
+            {
+                "category": "Alternative Video & Photo Canvases",
+                "icon": "fa-regular fa-images",
+                "source": "https://ads.tiktok.com/help/article/tiktok-auction-in-feed-ads",
+                "items": [
+                    {
+                        "name": "Landscape Video",
+                        "w": 1920,
+                        "h": 1080,
+                        "ratio": "16:9",
+                        "dec": "1.78",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Square Video",
+                        "w": 1080,
+                        "h": 1080,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Portrait Photo — 4:5",
+                        "w": 1080,
+                        "h": 1350,
+                        "ratio": "4:5",
+                        "dec": "0.80",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Square Photo Carousel",
+                        "w": 1080,
+                        "h": 1080,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "LIVE Vertical Layout",
+                        "w": 1080,
+                        "h": 1920,
+                        "ratio": "9:16",
+                        "dec": "0.56",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "LIVE Landscape Layout",
+                        "w": 1920,
+                        "h": 1080,
+                        "ratio": "16:9",
+                        "dec": "1.78",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    }
+                ]
+            },
+            {
+                "category": "Non-Spark Ad Minimums",
+                "icon": "fa-solid fa-bullhorn",
+                "source": "https://ads.tiktok.com/help/article/tiktok-auction-in-feed-ads",
+                "items": [
+                    {
+                        "name": "Vertical Ad — Minimum",
+                        "w": 540,
+                        "h": 960,
+                        "ratio": "9:16",
+                        "dec": "0.56",
+                        "shape": "rectangle",
+                        "note": "Official minimum 9:16 Non-Spark ad resolution."
+                    },
+                    {
+                        "name": "Horizontal Ad — Minimum",
+                        "w": 960,
+                        "h": 540,
+                        "ratio": "16:9",
+                        "dec": "1.78",
+                        "shape": "rectangle",
+                        "note": "Official minimum 16:9 Non-Spark ad resolution."
+                    },
+                    {
+                        "name": "Square Ad — Minimum",
+                        "w": 640,
+                        "h": 640,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "Official minimum 1:1 Non-Spark ad resolution."
+                    },
+                    {
+                        "name": "Vertical Ad — HD Canvas",
+                        "w": 1080,
+                        "h": 1920,
+                        "ratio": "9:16",
+                        "dec": "0.56",
+                        "shape": "rectangle",
+                        "note": "Working canvas above the minimum. Safe zones vary with captions and ad formats."
+                    }
+                ]
+            }
+        ],
+        "presetNotice": "Working canvases are design starting points, not guaranteed upload requirements. Placement crops and availability vary. Official dimensions are identified in each note."
+    },
+    "twitter": {
+        "title": "Twitter / X Media Standards",
+        "icon": "fa-brands fa-x-twitter",
+        "color": "#1da1f2",
+        "guideLink": "https://business.x.com/en/help/campaign-setup/creative-ad-specifications-old",
+        "guideLabel": "Platform Guide",
+        "categories": [
+            {
+                "category": "Feeds & Cards",
+                "icon": "fa-regular fa-images",
+                "items": [
+                    {
+                        "name": "Landscape Post",
+                        "w": 1600,
+                        "h": 900,
+                        "ratio": "16:9",
+                        "dec": "1.78",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing.",
+                        "variants": [
+                            {
+                                "name": "In-Stream Photo (16:9)",
+                                "w": 1600,
+                                "h": 900,
+                                "ratio": "16:9",
+                                "dec": "1.78",
+                                "shape": "rectangle",
+                                "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                            },
+                            {
+                                "name": "Large Landscape Post",
+                                "w": 1920,
+                                "h": 1080,
+                                "ratio": "16:9",
+                                "dec": "1.78",
+                                "shape": "rectangle",
+                                "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Square Image Post",
+                        "w": 1080,
+                        "h": 1080,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Portrait Image Post",
+                        "w": 1080,
+                        "h": 1350,
+                        "ratio": "4:5",
+                        "dec": "0.80",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Web Card Image",
+                        "w": 1200,
+                        "h": 628,
+                        "ratio": "300:157",
+                        "dec": "1.91",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    }
+                ]
+            },
+            {
+                "category": "Header & Profile",
+                "icon": "fa-solid fa-id-card",
+                "items": [
+                    {
+                        "name": "Profile Picture",
+                        "w": 400,
+                        "h": 400,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "circle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Header Banner",
+                        "w": 1500,
+                        "h": 500,
+                        "ratio": "3:1",
+                        "dec": "3.00",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    }
+                ]
+            },
+            {
+                "category": "Video & Ad Canvases",
+                "icon": "fa-solid fa-video",
+                "source": "https://business.x.com/en/help/campaign-setup/creative-ad-specifications-old",
+                "items": [
+                    {
+                        "name": "Square Video Ad",
+                        "w": 1200,
+                        "h": 1200,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "Recommended square video size in the linked X Ads guide."
+                    },
+                    {
+                        "name": "Landscape Video Ad",
+                        "w": 1920,
+                        "h": 1080,
+                        "ratio": "16:9",
+                        "dec": "1.78",
+                        "shape": "rectangle",
+                        "note": "Recommended landscape video size in the linked X Ads guide."
+                    },
+                    {
+                        "name": "Vertical Video Canvas",
+                        "w": 1080,
+                        "h": 1920,
+                        "ratio": "9:16",
+                        "dec": "0.56",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Portrait Video Canvas",
+                        "w": 1080,
+                        "h": 1350,
+                        "ratio": "4:5",
+                        "dec": "0.80",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Video Thumbnail — Landscape",
+                        "w": 1920,
+                        "h": 1080,
+                        "ratio": "16:9",
+                        "dec": "1.78",
+                        "shape": "rectangle",
+                        "note": "Use the same aspect ratio as the video."
+                    },
+                    {
+                        "name": "Video Thumbnail — Square",
+                        "w": 1200,
+                        "h": 1200,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "Use the same aspect ratio as the video."
+                    }
+                ]
+            },
+            {
+                "category": "Carousel & Campaign Images",
+                "icon": "fa-regular fa-images",
+                "source": "https://business.x.com/en/help/campaign-setup/creative-ad-specifications-old",
+                "items": [
+                    {
+                        "name": "Image Ad — Square",
+                        "w": 1200,
+                        "h": 1200,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Image Ad — Landscape",
+                        "w": 1200,
+                        "h": 628,
+                        "ratio": "300:157",
+                        "dec": "1.91",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Carousel Card — Square",
+                        "w": 1200,
+                        "h": 1200,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Carousel Card — Landscape",
+                        "w": 1200,
+                        "h": 628,
+                        "ratio": "300:157",
+                        "dec": "1.91",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Multi-image Post — Square Asset",
+                        "w": 1200,
+                        "h": 1200,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "Individual image working canvas; the combined feed layout varies with image count."
+                    }
+                ]
+            }
+        ],
+        "presetNotice": "Working canvases are design starting points, not guaranteed upload requirements. Placement crops and availability vary. Official dimensions are identified in each note."
+    },
+    "dribbble": {
+        "title": "Dribbble Shot Guidelines",
+        "icon": "fa-brands fa-dribbble",
+        "color": "#ea4c89",
+        "guideLink": "https://dribbble.com/stories/2018/08/22/more-pixels-and-a-perfect-crop",
+        "guideLabel": "Platform Guide",
+        "categories": [
+            {
+                "category": "Shots & Avatars",
+                "icon": "fa-solid fa-palette",
+                "items": [
+                    {
+                        "name": "Shot — 4:3",
+                        "w": 1600,
+                        "h": 1200,
+                        "ratio": "4:3",
+                        "dec": "1.33",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing.",
+                        "variants": [
+                            {
+                                "name": "Standard Shot HD",
+                                "w": 1600,
+                                "h": 1200,
+                                "ratio": "4:3",
+                                "dec": "1.33",
+                                "shape": "rectangle",
+                                "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                            },
+                            {
+                                "name": "Shot — 4:3 Large",
+                                "w": 2400,
+                                "h": 1800,
+                                "ratio": "4:3",
+                                "dec": "1.33",
+                                "shape": "rectangle",
+                                "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                            },
+                            {
+                                "name": "Shot — 4:3 Compact",
+                                "w": 800,
+                                "h": 600,
+                                "ratio": "4:3",
+                                "dec": "1.33",
+                                "shape": "rectangle",
+                                "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Shot — Square",
+                        "w": 1200,
+                        "h": 1200,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing.",
+                        "variants": [
+                            {
+                                "name": "Shot Preview Square",
+                                "w": 1200,
+                                "h": 1200,
+                                "ratio": "1:1",
+                                "dec": "1.00",
+                                "shape": "rectangle",
+                                "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                            },
+                            {
+                                "name": "Shot — Square Large",
+                                "w": 1600,
+                                "h": 1600,
+                                "ratio": "1:1",
+                                "dec": "1.00",
+                                "shape": "rectangle",
+                                "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Profile Picture",
+                        "w": 400,
+                        "h": 400,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "circle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Team Avatar",
+                        "w": 1200,
+                        "h": 1200,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "circle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    }
+                ]
+            },
+            {
+                "category": "Shot Presentation Canvases",
+                "icon": "fa-regular fa-images",
+                "source": "https://dribbble.com/stories/2018/08/22/more-pixels-and-a-perfect-crop",
+                "items": [
+                    {
+                        "name": "Shot — Landscape",
+                        "w": 1920,
+                        "h": 1080,
+                        "ratio": "16:9",
+                        "dec": "1.78",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Shot — Portrait",
+                        "w": 1200,
+                        "h": 1600,
+                        "ratio": "3:4",
+                        "dec": "0.75",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Long Case Study Panel",
+                        "w": 1600,
+                        "h": 3200,
+                        "ratio": "1:2",
+                        "dec": "0.50",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    }
+                ]
+            },
+            {
+                "category": "Motion & Cover Canvases",
+                "icon": "fa-solid fa-video",
+                "source": "https://dribbble.com/stories/2018/08/22/more-pixels-and-a-perfect-crop",
+                "items": [
+                    {
+                        "name": "Motion Shot — 4:3",
+                        "w": 1600,
+                        "h": 1200,
+                        "ratio": "4:3",
+                        "dec": "1.33",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Motion Shot — Landscape",
+                        "w": 1920,
+                        "h": 1080,
+                        "ratio": "16:9",
+                        "dec": "1.78",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Motion Shot — Square",
+                        "w": 1080,
+                        "h": 1080,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Project Cover — 4:3 Canvas",
+                        "w": 1600,
+                        "h": 1200,
+                        "ratio": "4:3",
+                        "dec": "1.33",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    }
+                ]
+            }
+        ],
+        "presetNotice": "Working canvases are design starting points, not guaranteed upload requirements. Placement crops and availability vary. Official dimensions are identified in each note."
+    },
+    "behance": {
+        "title": "Behance Formatting & Covers",
+        "icon": "fa-brands fa-behance",
+        "color": "#1769ff",
+        "guideLink": "https://help.behance.net/hc/en-us/articles/204484614-Guide-Formatting-Images-For-Display-On-Behance",
+        "guideLabel": "Platform Guide",
+        "categories": [
+            {
+                "category": "Projects & Banners",
+                "icon": "fa-solid fa-box-archive",
+                "items": [
+                    {
+                        "name": "Project Cover",
+                        "w": 808,
+                        "h": 632,
+                        "ratio": "101:79",
+                        "dec": "1.28",
+                        "shape": "rectangle",
+                        "note": "Official minimum cover upload; displays at 202 × 158 px.",
+                        "variants": [
+                            {
+                                "name": "Project Cover — Minimum",
+                                "w": 808,
+                                "h": 632,
+                                "ratio": "101:79",
+                                "dec": "1.28",
+                                "shape": "rectangle",
+                                "note": "Official minimum cover upload; displays at 202 × 158 px."
+                            },
+                            {
+                                "name": "Project Cover — Double Size",
+                                "w": 1616,
+                                "h": 1264,
+                                "ratio": "101:79",
+                                "dec": "1.28",
+                                "shape": "rectangle",
+                                "note": "2× working canvas at the official cover aspect ratio."
+                            },
+                            {
+                                "name": "Project Cover — Triple Size",
+                                "w": 2424,
+                                "h": 1896,
+                                "ratio": "101:79",
+                                "dec": "1.28",
+                                "shape": "rectangle",
+                                "note": "3× working canvas at the official cover aspect ratio."
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Project Content View",
+                        "w": 1400,
+                        "h": 1050,
+                        "ratio": "4:3",
+                        "dec": "1.33",
+                        "shape": "rectangle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    },
+                    {
+                        "name": "Lightbox — Landscape",
+                        "w": 2800,
+                        "h": 2100,
+                        "ratio": "4:3",
+                        "dec": "1.33",
+                        "shape": "rectangle",
+                        "note": "Up to 2800 px lightbox display width; height is a working choice."
+                    },
+                    {
+                        "name": "Profile Avatar",
+                        "w": 500,
+                        "h": 500,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "circle",
+                        "note": "Working canvas; confirm placement crop and upload limits in the platform before publishing."
+                    }
+                ],
+                "source": "https://help.behance.net/hc/en-us/articles/360033998134-Guide-Cover-Images"
+            },
+            {
+                "category": "Project Images & Lightbox",
+                "icon": "fa-regular fa-images",
+                "source": "https://help.behance.net/hc/en-us/articles/204484614-Guide-Formatting-Images-For-Display-On-Behance",
+                "items": [
+                    {
+                        "name": "Project Image — Square",
+                        "w": 1400,
+                        "h": 1400,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "1400 px project display width; height is a working choice."
+                    },
+                    {
+                        "name": "Lightbox — Square",
+                        "w": 2800,
+                        "h": 2800,
+                        "ratio": "1:1",
+                        "dec": "1.00",
+                        "shape": "rectangle",
+                        "note": "Up to 2800 px lightbox display width; height is a working choice."
+                    },
+                    {
+                        "name": "Project Image — Landscape",
+                        "w": 1400,
+                        "h": 788,
+                        "ratio": "350:197",
+                        "dec": "1.78",
+                        "shape": "rectangle",
+                        "note": "1400 px project display width; height is a working choice."
+                    },
+                    {
+                        "name": "Project Image — Portrait",
+                        "w": 1400,
+                        "h": 1867,
+                        "ratio": "1400:1867",
+                        "dec": "0.75",
+                        "shape": "rectangle",
+                        "note": "1400 px project display width; height is a working choice."
+                    },
+                    {
+                        "name": "Project Image — Long Panel",
+                        "w": 1400,
+                        "h": 2800,
+                        "ratio": "1:2",
+                        "dec": "0.50",
+                        "shape": "rectangle",
+                        "note": "1400 px project display width; height is a working choice."
+                    },
+                    {
+                        "name": "Lightbox — Portrait",
+                        "w": 2800,
+                        "h": 3733,
+                        "ratio": "2800:3733",
+                        "dec": "0.75",
+                        "shape": "rectangle",
+                        "note": "Up to 2800 px lightbox display width; height is a working choice."
+                    }
+                ]
+            },
+            {
+                "category": "Additional Branding Canvases",
+                "icon": "fa-regular fa-images",
+                "source": "https://help.behance.net/hc/en-us/articles/360015540594-Guide-Profile-Banner",
+                "items": [
+                    {
+                        "name": "Profile Banner — Optimal",
+                        "w": 3200,
+                        "h": 410,
+                        "ratio": "320:41",
+                        "dec": "7.80",
+                        "shape": "rectangle",
+                        "note": "Official optimal banner dimensions; PNG or JPG."
+                    }
+                ]
+            }
+        ],
+        "presetNotice": "Working canvases are design starting points, not guaranteed upload requirements. Placement crops and availability vary. Official dimensions are identified in each note."
+    },
+    "paper": {
+        "title": "ISO 216 Print Standards",
+        "icon": "fa-solid fa-file-lines",
+        "color": "#6366f1",
+        "guideLink": "https://en.wikipedia.org/wiki/ISO_216",
+        "guideLabel": "ISO 216 Guide",
+        "categories": []
+    }
+};
 
         const PAPER_SIZES = [
-            { name: "A4 Standard", mmW: 210, mmH: 297, inW: 8.27, inH: 11.69 },
-            { name: "A3 Poster", mmW: 297, mmH: 420, inW: 11.69, inH: 16.54 },
-            { name: "A5 Booklet", mmW: 148, mmH: 210, inW: 5.83, inH: 8.27 },
-            { name: "US Letter", mmW: 215.9, mmH: 279.4, inW: 8.5, inH: 11.0 },
-            { name: "US Legal", mmW: 215.9, mmH: 355.6, inW: 8.5, inH: 14.0 },
-            { name: "Tabloid / Ledger", mmW: 279.4, mmH: 431.8, inW: 11.0, inH: 17.0 }
-        ];
+    {
+        "name": "A4 Standard",
+        "mmW": 210,
+        "mmH": 297,
+        "inW": 8.27,
+        "inH": 11.69
+    },
+    {
+        "name": "A3 Poster",
+        "mmW": 297,
+        "mmH": 420,
+        "inW": 11.69,
+        "inH": 16.54
+    },
+    {
+        "name": "A5 Booklet",
+        "mmW": 148,
+        "mmH": 210,
+        "inW": 5.83,
+        "inH": 8.27
+    },
+    {
+        "name": "US Letter",
+        "mmW": 215.9,
+        "mmH": 279.4,
+        "inW": 8.5,
+        "inH": 11
+    },
+    {
+        "name": "US Legal",
+        "mmW": 215.9,
+        "mmH": 355.6,
+        "inW": 8.5,
+        "inH": 14
+    },
+    {
+        "name": "Tabloid / Ledger",
+        "mmW": 279.4,
+        "mmH": 431.8,
+        "inW": 11,
+        "inH": 17
+    },
+    {
+        "name": "A0 Poster",
+        "mmW": 841,
+        "mmH": 1189,
+        "inW": 33.11,
+        "inH": 46.811
+    },
+    {
+        "name": "A1 Poster",
+        "mmW": 594,
+        "mmH": 841,
+        "inW": 23.386,
+        "inH": 33.11
+    },
+    {
+        "name": "A2 Poster",
+        "mmW": 420,
+        "mmH": 594,
+        "inW": 16.535,
+        "inH": 23.386
+    },
+    {
+        "name": "A6 Postcard",
+        "mmW": 105,
+        "mmH": 148,
+        "inW": 4.134,
+        "inH": 5.827
+    },
+    {
+        "name": "A7 Pocket",
+        "mmW": 74,
+        "mmH": 105,
+        "inW": 2.913,
+        "inH": 4.134
+    },
+    {
+        "name": "A8 Card",
+        "mmW": 52,
+        "mmH": 74,
+        "inW": 2.047,
+        "inH": 2.913
+    },
+    {
+        "name": "A9 Small Label",
+        "mmW": 37,
+        "mmH": 52,
+        "inW": 1.457,
+        "inH": 2.047
+    },
+    {
+        "name": "A10 Label",
+        "mmW": 26,
+        "mmH": 37,
+        "inW": 1.024,
+        "inH": 1.457
+    },
+    {
+        "name": "B4",
+        "mmW": 250,
+        "mmH": 353,
+        "inW": 9.843,
+        "inH": 13.898
+    },
+    {
+        "name": "B5",
+        "mmW": 176,
+        "mmH": 250,
+        "inW": 6.929,
+        "inH": 9.843
+    },
+    {
+        "name": "B6",
+        "mmW": 125,
+        "mmH": 176,
+        "inW": 4.921,
+        "inH": 6.929
+    },
+    {
+        "name": "C4 Envelope",
+        "mmW": 229,
+        "mmH": 324,
+        "inW": 9.016,
+        "inH": 12.756
+    },
+    {
+        "name": "C5 Envelope",
+        "mmW": 162,
+        "mmH": 229,
+        "inW": 6.378,
+        "inH": 9.016
+    },
+    {
+        "name": "C6 Envelope",
+        "mmW": 114,
+        "mmH": 162,
+        "inW": 4.488,
+        "inH": 6.378
+    },
+    {
+        "name": "DL Envelope",
+        "mmW": 110,
+        "mmH": 220,
+        "inW": 4.331,
+        "inH": 8.661
+    },
+    {
+        "name": "US Executive",
+        "mmW": 184.15,
+        "mmH": 266.7,
+        "inW": 7.25,
+        "inH": 10.5
+    },
+    {
+        "name": "US Statement",
+        "mmW": 139.7,
+        "mmH": 215.9,
+        "inW": 5.5,
+        "inH": 8.5
+    },
+    {
+        "name": "Photo 4 × 6 in",
+        "mmW": 101.6,
+        "mmH": 152.4,
+        "inW": 4,
+        "inH": 6
+    },
+    {
+        "name": "Photo 5 × 7 in",
+        "mmW": 127,
+        "mmH": 177.8,
+        "inW": 5,
+        "inH": 7
+    },
+    {
+        "name": "Photo 8 × 10 in",
+        "mmW": 203.2,
+        "mmH": 254,
+        "inW": 8,
+        "inH": 10
+    }
+];
 
         let activeTab = 'cinema';
         let isSyncingInputs = false;
@@ -668,68 +2506,48 @@
         }
 
         function calculateAspectRatio(w, h) {
-            if (!w || !h || w <= 0 || h <= 0) return { ratio: "N/A", dec: "0.00" };
-            const decVal = (w / h).toFixed(2);
-            
-            if (Math.abs(decVal - 1.78) < 0.02) return { ratio: "16:9", dec: decVal };
-            if (Math.abs(decVal - 0.56) < 0.02) return { ratio: "9:16", dec: decVal };
-            if (Math.abs(decVal - 1.00) < 0.01) return { ratio: "1:1", dec: decVal };
-            if (Math.abs(decVal - 1.33) < 0.02) return { ratio: "4:3", dec: decVal };
-            if (Math.abs(decVal - 0.75) < 0.02) return { ratio: "3:4", dec: decVal };
-            if (Math.abs(decVal - 0.80) < 0.02) return { ratio: "4:5", dec: decVal };
-
+            if (!Number.isInteger(w) || !Number.isInteger(h) || w <= 0 || h <= 0) return { ratio: "N/A", dec: "0.00" };
             const divisor = gcd(w, h);
-            const simpleW = w / divisor;
-            const simpleH = h / divisor;
+            return { ratio: (w / divisor) + ":" + (h / divisor), dec: (w / h).toFixed(2) };
+        }
 
-            if (simpleW < 100 && simpleH < 100) {
-                return { ratio: `${simpleW}:${simpleH}`, dec: decVal };
-            }
-            return { ratio: `${decVal}:1`, dec: decVal };
+        function validDimension(value) {
+            return Number.isInteger(value) && value >= 1 && value <= 20000;
+        }
+
+        function readDimensions() {
+            const w = Number(document.getElementById('input-width').value);
+            const h = Number(document.getElementById('input-height').value);
+            return validDimension(w) && validDimension(h) ? { w, h } : null;
         }
 
         function handleInputCalculation(source) {
-            if (isSyncingInputs) return;
-            isSyncingInputs = true;
-
             const inputW = document.getElementById('input-width');
             const inputH = document.getElementById('input-height');
-            const inputRatioXY = document.getElementById('input-ratio-xy');
-            const inputRatioDec = document.getElementById('input-ratio-dec');
-
-            let w = parseInt(inputW.value) || 1080;
-            let h = parseInt(inputH.value) || 1080;
-
-            if (source === 'xy') {
-                const parts = inputRatioXY.value.split(':');
-                if (parts.length === 2) {
-                    const rx = parseFloat(parts[0]);
-                    const ry = parseFloat(parts[1]);
-                    if (rx > 0 && ry > 0) {
-                        h = Math.round(w / (rx / ry));
-                        inputH.value = h;
-                        inputRatioDec.value = (rx / ry).toFixed(2);
-                    }
-                }
-            } else if (source === 'dec') {
-                const dec = parseFloat(inputRatioDec.value);
-                if (dec > 0) {
-                    h = Math.round(w / dec);
-                    inputH.value = h;
-                    inputRatioXY.value = `${dec.toFixed(2)}:1`;
-                }
-            } else {
-                const res = calculateAspectRatio(w, h);
-                inputRatioXY.value = res.ratio;
-                inputRatioDec.value = res.dec;
+            const xy = document.getElementById('input-ratio-xy');
+            const dec = document.getElementById('input-ratio-dec');
+            const w = Number(inputW.value);
+            let h = Number(inputH.value);
+            if (!validDimension(w)) return;
+            if (source === 'xy' || source === 'dec') {
+                const parts = xy.value.split(':').map(Number);
+                const ratio = source === 'dec' ? Number(dec.value) :
+                    (parts.length === 2 && parts.every(n => Number.isFinite(n) && n > 0) ? parts[0] / parts[1] : NaN);
+                if (!Number.isFinite(ratio) || ratio <= 0) return;
+                h = Math.round(w / ratio);
+                if (!validDimension(h)) return;
+                inputH.value = h;
             }
-
-            isSyncingInputs = false;
+            if (!validDimension(h)) return;
+            const result = calculateAspectRatio(w, h);
+            if (source !== 'xy') xy.value = result.ratio;
+            if (source !== 'dec') dec.value = result.dec;
             updateConsolePreview();
         }
 
         function toggleStyleControls() {
             const mode = document.getElementById('input-bg-style').value;
+            document.getElementById('image-controls').classList.toggle('hidden', mode !== 'image');
             const solidBox = document.getElementById('color-picker-solid');
             const gradBox = document.getElementById('gradient-controls');
             const uvBox = document.getElementById('uv-controls');
@@ -792,7 +2610,10 @@
 
                     // Row letters A-Z & Column numbers label coordinates
                     if (cellW > 18 && cellH > 18) {
-                        const rowChar = String.fromCharCode(65 + (r % 26));
+                        let rowChar = '';
+                        for (let index = r + 1; index > 0; index = Math.floor((index - 1) / 26)) {
+                            rowChar = String.fromCharCode(65 + (index - 1) % 26) + rowChar;
+                        }
                         const colNum = c + 1;
                         const labelText = `${rowChar}${colNum}`;
 
@@ -842,10 +2663,126 @@
             return { x0, y0, x1, y1 };
         }
 
-        function drawShapePatternToCanvas(canvas, width, height, shape, styleMode, c1, c2, angle, isUVColorized, uvMode, uvDivs, uvPx) {
-            canvas.width = width;
-            canvas.height = height;
+        function syncImageBackgroundColor(source) {
+            const picker = document.getElementById('input-image-background-color');
+            const text = document.getElementById('input-image-background-hex');
+            if (source !== 'picker') {
+                let value = text.value.trim().replace(/^#/, '');
+                if (/^[0-9a-f]{3}$/i.test(value)) value = value.split('').map(c => c + c).join('');
+                if (/^[0-9a-f]{6}$/i.test(value)) picker.value = '#' + value;
+                else if (source !== 'commit') return;
+            }
+            if (source !== 'text') text.value = picker.value.toUpperCase();
+            updateConsolePreview();
+        }
+
+        let uploadedImage = null;
+        let imageLoadVersion = 0;
+
+        function syncImageSliders() {
+            for (const key of ['x', 'y', 'scale']) {
+                const number = document.getElementById('input-image-' + key);
+                const slider = document.getElementById('slider-image-' + key);
+                const value = Number(number.value);
+                if (key !== 'scale') {
+                    const dimension = Number(document.getElementById(key === 'x' ? 'input-width' : 'input-height').value) || 1080;
+                    const limit = Math.max(dimension, Number.isFinite(value) ? Math.abs(value) : 0);
+                    slider.min = -limit;
+                    slider.max = limit;
+                }
+                slider.value = Number.isFinite(value) && number.value !== '' ? value : (key === 'scale' ? 100 : 0);
+            }
+        }
+
+        function updateImagePlacement(key, value, fromSlider = false) {
+            const number = document.getElementById('input-image-' + key);
+            if (fromSlider) number.value = value;
+            if (number.value === '' || !Number.isFinite(Number(number.value))) return;
+            if (key === 'scale') number.value = Math.min(1000, Math.max(1, Number(number.value)));
+            syncImageSliders();
+            updateConsolePreview();
+        }
+
+        function commitImagePlacement(key) {
+            const number = document.getElementById('input-image-' + key);
+            if (number.value === '' || !Number.isFinite(Number(number.value))) number.value = key === 'scale' ? 100 : 0;
+            updateImagePlacement(key, number.value);
+        }
+
+        function resetImagePlacement() {
+            document.getElementById('input-image-x').value = 0;
+            document.getElementById('input-image-y').value = 0;
+            document.getElementById('input-image-scale').value = 100;
+            updateConsolePreview();
+        }
+
+        async function loadImageFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const version = ++imageLoadVersion;
+            const status = document.getElementById('image-status');
+            const url = URL.createObjectURL(file);
+            status.textContent = 'Loading image…';
+            try {
+                const image = new Image();
+                image.src = url;
+                await image.decode();
+                if (version !== imageLoadVersion) return;
+                // Freeze animated sources to one frame for predictable exports.
+                const still = document.createElement('canvas');
+                still.width = image.naturalWidth;
+                still.height = image.naturalHeight;
+                still.getContext('2d').drawImage(image, 0, 0);
+                uploadedImage = still;
+                status.textContent = file.name + ' · ' + still.width + ' × ' + still.height + ' px';
+                resetImagePlacement();
+            } catch (error) {
+                if (version !== imageLoadVersion) return;
+                input.value = '';
+                status.textContent = uploadedImage ? 'Could not open that file. Previous image retained.' : 'Could not open that file. Try PNG, JPEG or WebP.';
+                showToast('Image could not be loaded', 'Please choose another image.');
+            } finally {
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        function imageReadyForExport() {
+            if (document.getElementById('input-bg-style').value === 'image' && !uploadedImage) {
+                showToast('Choose an image first', 'Upload an image in the Image style controls.');
+                return false;
+            }
+            return true;
+        }
+
+        function cornerRadius(width, height) {
+            const value = Number(document.getElementById('input-corner-radius').value);
+            return Math.min(Math.min(width, height) / 2, Math.max(0, Number.isFinite(value) ? value : 0));
+        }
+
+        function setCornerRadius(value) {
+            const input = document.getElementById('input-corner-radius');
+            input.value = Number.isFinite(Number(value)) ? Number(value) : 0;
+            updateConsolePreview();
+        }
+
+        function syncCornerControls() {
+            const rounded = document.getElementById('input-shape').value === 'rounded_rectangle';
+            document.getElementById('rounded-controls').classList.toggle('hidden', !rounded);
+            const dimensions = readDimensions();
+            if (!dimensions) return;
+            const max = Math.floor(Math.min(dimensions.w, dimensions.h) / 2);
+            const input = document.getElementById('input-corner-radius');
+            const slider = document.getElementById('slider-corner-radius');
+            input.max = slider.max = max;
+            if (input.value !== '') input.value = Math.min(max, cornerRadius(dimensions.w, dimensions.h));
+            slider.value = input.value || 0;
+        }
+
+        function drawShapePatternToCanvas(canvas, width, height, shape, styleMode, c1, c2, angle, isUVColorized, uvMode, uvDivs, uvPx, renderScale = 1) {
+            canvas.width = Math.max(1, Math.round(width * renderScale));
+            canvas.height = Math.max(1, Math.round(height * renderScale));
             const ctx = canvas.getContext('2d');
+            ctx.setTransform(canvas.width / width, 0, 0, canvas.height / height, 0, 0);
             ctx.clearRect(0, 0, width, height);
 
             ctx.save();
@@ -854,9 +2791,28 @@
                 const radius = Math.min(width, height) / 2;
                 ctx.arc(width / 2, height / 2, radius, 0, Math.PI * 2);
                 ctx.clip();
+            } else if (shape === 'rounded_rectangle') {
+                ctx.beginPath();
+                ctx.roundRect(0, 0, width, height, cornerRadius(width, height));
+                ctx.clip();
             }
 
-            if (styleMode === 'gradient') {
+            if (styleMode === 'image') {
+                if (document.getElementById('input-image-background').value === 'solid') {
+                    ctx.fillStyle = document.getElementById('input-image-background-color').value;
+                    ctx.fillRect(0, 0, width, height);
+                }
+                if (uploadedImage) {
+                    const offset = id => { const n = Number(document.getElementById(id).value); return Number.isFinite(n) ? n : 0; };
+                    const percent = Math.min(1000, Math.max(1, offset('input-image-scale') || 100));
+                    const diameter = Math.min(width, height);
+                    const maskW = shape === 'circle' ? diameter : width;
+                    const maskH = shape === 'circle' ? diameter : height;
+                    const scale = Math.max(maskW / uploadedImage.width, maskH / uploadedImage.height) * percent / 100;
+                    const imageW = uploadedImage.width * scale, imageH = uploadedImage.height * scale;
+                    ctx.drawImage(uploadedImage, (width - imageW) / 2 + offset('input-image-x'), (height - imageH) / 2 + offset('input-image-y'), imageW, imageH);
+                }
+            } else if (styleMode === 'gradient') {
                 const coords = getLinearGradientCoords(angle, width, height);
                 const grad = ctx.createLinearGradient(coords.x0, coords.y0, coords.x1, coords.y1);
                 grad.addColorStop(0, c1);
@@ -869,8 +2825,8 @@
                     cols = uvDivs;
                     rows = uvDivs;
                 } else {
-                    cols = Math.max(1, Math.round(width / uvPx));
-                    rows = Math.max(1, Math.round(height / uvPx));
+                    cols = width / uvPx;
+                    rows = height / uvPx;
                 }
                 drawStandardUVGrid(ctx, width, height, isUVColorized, cols, rows);
             } else {
@@ -882,22 +2838,27 @@
         }
 
         function updateConsolePreview() {
-            const w = parseInt(document.getElementById('input-width').value) || 1080;
-            const h = parseInt(document.getElementById('input-height').value) || 1080;
+            document.getElementById('image-background-color-box').classList.toggle('hidden', document.getElementById('input-image-background').value !== 'solid');
+            syncCornerControls();
+            syncImageSliders();
+            const dimensions = readDimensions();
+            if (!dimensions) { showToast('Invalid dimensions', 'Use whole pixels from 1 to 20000.'); return; }
+            const { w, h } = dimensions;
             const shape = document.getElementById('input-shape').value;
             const styleMode = document.getElementById('input-bg-style').value;
             const c1 = document.getElementById('input-hex-color').value;
             const c2 = document.getElementById('input-hex-color2').value;
-            const angle = parseInt(document.getElementById('input-grad-angle').value) || 135;
+            const angle = Number(document.getElementById('input-grad-angle').value);
 
             const isUVColorized = document.getElementById('input-uv-colorized').checked;
             const uvMode = document.getElementById('input-uv-mode').value;
             const uvDivs = parseInt(document.getElementById('input-uv-divs').value) || 8;
-            const uvPx = parseInt(document.getElementById('input-uv-px').value) || 100;
+            const uvPx = Math.min(512, Math.max(8, Number(document.getElementById('input-uv-px').value) || 100));
 
-            document.getElementById('preview-dimensions-tag').innerText = `${w} × ${h} px`;
+
 
             const circleMetrics = document.getElementById('preview-circle-metrics');
+            circleMetrics.parentElement.classList.toggle('hidden', shape !== 'circle');
             const previewContainer = document.getElementById('preview-box-container');
             const canvas = document.getElementById('preview-canvas');
 
@@ -905,16 +2866,18 @@
             let previewW, previewH;
             if (w >= h) {
                 previewW = maxDim;
-                previewH = Math.max(20, Math.round(maxDim * (h / w)));
+                previewH = maxDim * (h / w);
             } else {
                 previewH = maxDim;
-                previewW = Math.max(20, Math.round(maxDim * (w / h)));
+                previewW = maxDim * (w / h);
             }
 
             previewContainer.style.width = `${previewW}px`;
             previewContainer.style.height = `${previewH}px`;
 
-            drawShapePatternToCanvas(canvas, previewW, previewH, shape, styleMode, c1, c2, angle, isUVColorized, uvMode, uvDivs, uvPx);
+            // Render with the export's logical dimensions. Scaling just the cell
+            // size changed label visibility, line weights and partial cells.
+            drawShapePatternToCanvas(canvas, w, h, shape, styleMode, c1, c2, angle, isUVColorized, uvMode, uvDivs, uvPx, Math.min(1, 2048 / Math.max(w, h)));
 
             if (shape === 'circle') {
                 circleMetrics.classList.remove('hidden');
@@ -954,161 +2917,74 @@
         }
 
         /* Items 5 & 7: Card Color Themes & Immediate Reactive Updates */
-        function applyCardTheme() {
-            const theme = document.getElementById('card-theme-select').value;
-            const card = document.getElementById('guideline-card-preview');
-            const customBox = document.getElementById('card-custom-colors-box');
-
-            if (theme === 'custom') {
-                customBox.classList.remove('hidden');
-                card.style.backgroundColor = document.getElementById('card-bg-custom').value;
-                card.style.color = document.getElementById('card-text-custom').value;
-            } else {
-                customBox.classList.add('hidden');
-                if (theme === 'dark') {
-                    card.style.backgroundColor = '#202025';
-                    card.style.color = '#F3F4F6';
-                } else if (theme === 'light') {
-                    card.style.backgroundColor = '#FFFFFF';
-                    card.style.color = '#0F172A';
-                } else if (theme === 'slate') {
-                    card.style.backgroundColor = '#0F172A';
-                    card.style.color = '#F8FAFC';
-                }
+        function syncCardColor(id, source) {
+            const picker = document.getElementById(id);
+            const text = document.getElementById(id + '-hex');
+            if (source !== 'picker') {
+                let value = text.value.trim().replace(/^#/, '');
+                if (/^[0-9a-f]{3}$/i.test(value)) value = value.split('').map(c => c + c).join('');
+                if (/^[0-9a-f]{6}$/i.test(value)) picker.value = '#' + value;
+                else if (source !== 'commit') return;
             }
+            if (source !== 'text') text.value = picker.value.toUpperCase();
+            applyCardTheme();
+        }
+
+        function applyCardTheme() {
+            document.getElementById('card-custom-colors-box').classList.toggle('hidden',
+                document.getElementById('card-theme-select').value !== 'custom');
             updateGuidelineCard();
         }
 
         function updateGuidelineCard() {
-            const title = document.getElementById('guideline-title').value || "Brand Spec";
-            const w = document.getElementById('input-width').value || "1080";
-            const h = document.getElementById('input-height').value || "1080";
-            const ratioXY = document.getElementById('input-ratio-xy').value;
-            const ratioDec = document.getElementById('input-ratio-dec').value;
-            const shape = document.getElementById('input-shape').value;
-            const styleMode = document.getElementById('input-bg-style').value;
-            const c1 = document.getElementById('input-hex-color').value;
-            const c2 = document.getElementById('input-hex-color2').value;
-            const angle = parseInt(document.getElementById('input-grad-angle').value) || 135;
-
-            const isUVColorized = document.getElementById('input-uv-colorized').checked;
-            const uvMode = document.getElementById('input-uv-mode').value;
-            const uvDivs = parseInt(document.getElementById('input-uv-divs').value) || 8;
-            const uvPx = parseInt(document.getElementById('input-uv-px').value) || 100;
-
+            if (!readDimensions()) return;
+            // Display the actual export canvas: themes, fonts, layout and sample
+            // are rendered once, with no competing DOM/CSS interpretation.
+            const rendered = createGuidelineCardCanvas();
+            if (!rendered) return;
             const card = document.getElementById('guideline-card-preview');
-            const displayTitle = document.getElementById('card-display-title');
-            
-            displayTitle.innerText = title;
-
-            // Item 2: Dynamic opposite color for Title to guarantee full readability
-            const currentBg = window.getComputedStyle(card).backgroundColor;
-            // Extract RGB values from CSS string
-            const rgbMatch = currentBg.match(/\d+/g);
-            if (rgbMatch && rgbMatch.length >= 3) {
-                const yiq = ((parseInt(rgbMatch[0]) * 299) + (parseInt(rgbMatch[1]) * 587) + (parseInt(rgbMatch[2]) * 114)) / 1000;
-                displayTitle.style.color = (yiq >= 128) ? '#000000' : '#FFFFFF';
-            } else {
-                displayTitle.style.color = '#FF6B00';
-            }
-
-            // Item 3: Info Layout positioning dynamics
-            const layout = document.getElementById('card-info-layout').value;
-            const headerZone = document.getElementById('card-header-zone');
-            const mainBody = document.getElementById('card-main-body');
-            const badgesGrid = document.getElementById('card-badges-grid');
-
-            if (layout === 'top') {
-                card.className = "w-full max-w-xl border border-resolve-border rounded-xl p-5 shadow-2xl font-mono transition-colors duration-200 flex flex-col";
-                mainBody.className = "flex flex-col w-full gap-3";
-                badgesGrid.className = "grid grid-cols-3 gap-2 text-center text-xs";
-                card.insertBefore(badgesGrid, document.getElementById('card-preview-container'));
-                card.insertBefore(headerZone, badgesGrid);
-            } else if (layout === 'bottom') {
-                card.className = "w-full max-w-xl border border-resolve-border rounded-xl p-5 shadow-2xl font-mono transition-colors duration-200 flex flex-col";
-                mainBody.className = "flex flex-col w-full gap-3";
-                badgesGrid.className = "grid grid-cols-3 gap-2 text-center text-xs";
-                card.insertBefore(headerZone, mainBody);
-                mainBody.appendChild(document.getElementById('card-preview-container'));
-                mainBody.appendChild(badgesGrid);
-            } else if (layout === 'left') {
-                card.className = "w-full max-w-xl border border-resolve-border rounded-xl p-5 shadow-2xl font-mono transition-colors duration-200 flex flex-col";
-                mainBody.className = "flex flex-col md:flex-row-reverse w-full gap-3 items-stretch";
-                badgesGrid.className = "flex flex-col gap-2 text-center text-xs w-full md:w-48";
-                card.insertBefore(headerZone, mainBody);
-                mainBody.appendChild(document.getElementById('card-preview-container'));
-                mainBody.appendChild(badgesGrid);
-            } else if (layout === 'right') {
-                card.className = "w-full max-w-xl border border-resolve-border rounded-xl p-5 shadow-2xl font-mono transition-colors duration-200 flex flex-col";
-                mainBody.className = "flex flex-col md:flex-row w-full gap-3 items-stretch";
-                badgesGrid.className = "flex flex-col gap-2 text-center text-xs w-full md:w-48";
-                card.insertBefore(headerZone, mainBody);
-                mainBody.appendChild(document.getElementById('card-preview-container'));
-                mainBody.appendChild(badgesGrid);
-            }
-
-            document.getElementById('card-dim').innerText = `${w} × ${h}`;
-            document.getElementById('card-ratio').innerText = `${ratioXY} (${ratioDec})`;
-            
-            const shapePreview = document.getElementById('card-shape-preview');
-            shapePreview.style.borderRadius = shape === 'circle' ? '50%' : '4px';
-
-            let maxDim = 110;
-            let pw = w >= h ? maxDim : Math.max(20, Math.round(maxDim * (w / h)));
-            let ph = h > w ? maxDim : Math.max(20, Math.round(maxDim * (h / w)));
-            shapePreview.style.width = `${pw}px`;
-            shapePreview.style.height = `${ph}px`;
-
-            const cardCanvas = document.getElementById('card-shape-canvas');
-            drawShapePatternToCanvas(cardCanvas, pw, ph, shape, styleMode, c1, c2, angle, isUVColorized, uvMode, uvDivs, uvPx);
-
-            // Items 4 & 5: Style / HEX display formatted with color swatches
-            const cardHexContainer = document.getElementById('card-hex');
-            if (styleMode === 'solid') {
-                cardHexContainer.innerHTML = `
-                    <span class="inline-block w-2.5 h-2.5 rounded-sm border border-white/30" style="background-color: ${c1}"></span>
-                    <span style="color: ${c1}">${c1.toUpperCase()}</span>
-                `;
-            } else if (styleMode === 'gradient') {
-                cardHexContainer.innerHTML = `
-                    <div class="flex items-center gap-1">
-                        <span class="inline-block w-2.5 h-2.5 rounded-sm border border-white/30" style="background-color: ${c1}"></span>
-                        <span style="color: ${c1}">${c1.toUpperCase()}</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <span class="inline-block w-2.5 h-2.5 rounded-sm border border-white/30" style="background-color: ${c2}"></span>
-                        <span style="color: ${c2}">${c2.toUpperCase()}</span>
-                    </div>
-                    <span class="text-[10px] opacity-80">${angle}°</span>
-                `;
-            } else {
-                cardHexContainer.innerText = isUVColorized ? 'UV COLOR' : 'UV MONO';
-            }
+            card.className = 'w-full max-w-xl border border-resolve-border rounded-xl shadow-2xl overflow-hidden';
+            card.style.backgroundColor = '';
+            card.style.color = '';
+            rendered.id = 'guideline-export-preview';
+            rendered.style.cssText = 'display:block;width:100%;height:auto;';
+            rendered.setAttribute('role', 'img');
+            rendered.setAttribute('aria-label', 'Guideline card export preview');
+            card.replaceChildren(rendered);
         }
 
-        function generateBlankSlatePNG(width, height, filename) {
+        function generateBlankSlatePNG(width, height, filename, presetShape) {
+            if (!imageReadyForExport()) return;
+            if (!validDimension(width) || !validDimension(height) || width * height > 67108864) {
+                showToast('Export too large or invalid', 'Use 1–20000 pixels per side and at most 64 megapixels.');
+                return;
+            }
             const canvas = document.createElement('canvas');
-            const shape = document.getElementById('input-shape').value;
+            const shape = presetShape || document.getElementById('input-shape').value;
             const styleMode = document.getElementById('input-bg-style').value;
             const c1 = document.getElementById('input-hex-color').value || '#FFFFFF';
             const c2 = document.getElementById('input-hex-color2').value || '#FF6B00';
-            const angle = parseInt(document.getElementById('input-grad-angle').value) || 135;
+            const angle = Number(document.getElementById('input-grad-angle').value);
 
             const isUVColorized = document.getElementById('input-uv-colorized').checked;
             const uvMode = document.getElementById('input-uv-mode').value;
             const uvDivs = parseInt(document.getElementById('input-uv-divs').value) || 8;
-            const uvPx = parseInt(document.getElementById('input-uv-px').value) || 100;
+            const uvPx = Math.min(512, Math.max(8, Number(document.getElementById('input-uv-px').value) || 100));
 
             drawShapePatternToCanvas(canvas, width, height, shape, styleMode, c1, c2, angle, isUVColorized, uvMode, uvDivs, uvPx);
 
-            const link = document.createElement('a');
-            link.download = filename || `Slate_${width}x${height}.png`;
-            link.href = canvas.toDataURL('image/png');
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            showToast("Slate Exported", `${width}×${height} PNG generated`);
+            canvas.toBlob(blob => {
+                if (!blob) { showToast('Export failed', 'Try smaller dimensions.'); return; }
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = filename || 'Slate_' + width + 'x' + height + '.png';
+                link.href = url;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+                showToast('Slate Exported', width + '×' + height + ' PNG generated');
+            }, 'image/png');
         }
 
         /* Clean Export Guideline Card Canvas */
@@ -1143,63 +3019,116 @@
             ctx.fillRect(0, 0, 1200, 630);
 
             const title = document.getElementById('guideline-title').value || "Brand Spec";
-            const w = parseInt(document.getElementById('input-width').value) || 1080;
-            const h = parseInt(document.getElementById('input-height').value) || 1080;
-            const ratioXY = document.getElementById('input-ratio-xy').value;
-            const ratioDec = document.getElementById('input-ratio-dec').value;
+            const dimensions = readDimensions();
+            if (!dimensions) { showToast('Invalid dimensions', 'Use whole pixels from 1 to 20000.'); return; }
+            const { w, h } = dimensions;
+            const { ratio: ratioXY, dec: ratioDec } = calculateAspectRatio(w, h);
             const shape = document.getElementById('input-shape').value;
             const styleMode = document.getElementById('input-bg-style').value;
             const c1 = document.getElementById('input-hex-color').value;
             const c2 = document.getElementById('input-hex-color2').value;
-            const angle = parseInt(document.getElementById('input-grad-angle').value) || 135;
+            const angle = Number(document.getElementById('input-grad-angle').value);
 
             const isUVColorized = document.getElementById('input-uv-colorized').checked;
             const uvMode = document.getElementById('input-uv-mode').value;
             const uvDivs = parseInt(document.getElementById('input-uv-divs').value) || 8;
-            const uvPx = parseInt(document.getElementById('input-uv-px').value) || 100;
+            const uvPx = Math.min(512, Math.max(8, Number(document.getElementById('input-uv-px').value) || 100));
 
-            // Render Header with Dynamic High-Contrast Title
-            const titleColor = getContrastYIQ(cardBg);
-            ctx.fillStyle = titleColor;
-            ctx.font = 'bold 38px Inter, sans-serif';
-            ctx.fillText(title, 60, 85);
+            // The earlier card styling, shared by the preview and PNG export.
+            const rounded = (x, y, width, height, radius, fill, stroke) => {
+                ctx.beginPath(); ctx.roundRect(x, y, width, height, radius);
+                ctx.fillStyle = fill; ctx.fill();
+                if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 2; ctx.stroke(); }
+            };
+            const isLight = getContrastYIQ(cardBg) === '#000000';
+            const border = isLight ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.12)';
+            const muted = isLight ? '#64748B' : '#A1A1AA';
+            ctx.fillStyle = getContrastYIQ(cardBg);
+            ctx.font = 'bold 30px "JetBrains Mono", monospace';
+            ctx.fillText(title, 44, 66, 1112);
+            ctx.strokeStyle = border; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(44, 90); ctx.lineTo(1156, 90); ctx.stroke();
 
-            // Spec Box Background
-            ctx.fillStyle = boxBg;
-            ctx.fillRect(60, 120, 1080, 390);
-
-            // Render Shape Sample inside Box
-            const sampleMax = 310;
-            let sw = w >= h ? sampleMax : Math.max(40, Math.round(sampleMax * (w / h)));
-            let sh = h > w ? sampleMax : Math.max(40, Math.round(sampleMax * (h / w)));
-            
+            const layout = document.getElementById('card-info-layout').value;
+            const side = layout === 'left' || layout === 'right';
+            const sampleX = side && layout === 'left' ? 408 : 44;
+            const sampleY = layout === 'top' ? 224 : 114;
+            const sampleWidth = side ? 748 : 1112;
+            const sampleHeight = side ? 472 : 362;
+            ctx.save();
+            ctx.beginPath(); ctx.roundRect(sampleX, sampleY, sampleWidth, sampleHeight, 12); ctx.clip();
+            ctx.fillStyle = isLight ? '#E2E8F0' : '#0D0D0F';
+            ctx.fillRect(sampleX, sampleY, sampleWidth, sampleHeight);
+            ctx.fillStyle = isLight ? '#CBD5E1' : '#18181C';
+            for (let y = 0; y < sampleHeight; y += 16) for (let x = 0; x < sampleWidth; x += 16) {
+                if ((x / 16 + y / 16) % 2 === 0) ctx.fillRect(sampleX + x, sampleY + y, 16, 16);
+            }
+            ctx.restore();
+            ctx.strokeStyle = border; ctx.beginPath();ctx.roundRect(sampleX, sampleY, sampleWidth, sampleHeight, 12);ctx.stroke();
+            const scale = 230 / Math.max(w, h);
+            const sw = w * scale, sh = h * scale;
             const sampleCanvas = document.createElement('canvas');
-            drawShapePatternToCanvas(sampleCanvas, sw, sh, shape, styleMode, c1, c2, angle, isUVColorized, uvMode, uvDivs, uvPx);
-            
-            ctx.drawImage(sampleCanvas, 600 - sw / 2, 315 - sh / 2);
+            drawShapePatternToCanvas(sampleCanvas, w, h, shape, styleMode, c1, c2, angle, isUVColorized, uvMode, uvDivs, uvPx, Math.min(1, 2048 / Math.max(w, h)));
+            const sx = sampleX + (sampleWidth - sw) / 2, sy = sampleY + (sampleHeight - sh) / 2;
+            ctx.drawImage(sampleCanvas, sx, sy, sw, sh);
+            ctx.strokeStyle = '#FF6B00'; ctx.lineWidth = 3;
+            if (shape === 'circle') { ctx.beginPath();ctx.arc(sx + sw / 2, sy + sh / 2, Math.min(sw, sh) / 2, 0, Math.PI * 2);ctx.stroke(); }
+            else if (shape === 'rounded_rectangle') {
+                ctx.beginPath();ctx.roundRect(sx, sy, sw, sh, cornerRadius(w, h) * scale);ctx.stroke();
+            } else ctx.strokeRect(sx, sy, sw, sh);
 
-            // Metrics Badges
-            ctx.fillStyle = boxBg;
-            ctx.fillRect(60, 530, 340, 60);
-            ctx.fillRect(430, 530, 340, 60);
-            ctx.fillRect(800, 530, 340, 60);
-
-            ctx.fillStyle = textColor;
-            ctx.font = 'bold 22px JetBrains Mono, monospace';
-            ctx.fillText(`${w} × ${h} px`, 80, 568);
-            ctx.fillText(`${ratioXY} (${ratioDec})`, 450, 568);
-
-            // Item 4: Canvas Export Gradient String format (#XXXXXX #XXXXXX XXX°)
-            let hexLabel = c1.toUpperCase();
-            if (styleMode === 'gradient') hexLabel = `${c1.toUpperCase()} ${c2.toUpperCase()} ${angle}°`;
-            if (styleMode === 'uv_grid') hexLabel = isUVColorized ? 'UV COLOR' : 'UV MONO';
-            ctx.fillText(hexLabel, 820, 568);
+            const badgeWidth = side ? 340 : (1112 - 32) / 3;
+            const badgeHeight = side ? (472 - 32) / 3 : 86;
+            const bx = side && layout === 'right' ? 816 : 44;
+            const by = layout === 'top' || side ? 114 : 500;
+            const shapeLabel = shape === 'circle' ? 'DIAMETER / RADIUS' : shape === 'rounded_rectangle' ? 'CORNER RADIUS' : 'RATIO';
+            const labels = [shape === 'rectangle' ? 'RESOLUTION' : 'CANVAS SIZE', shapeLabel, 'STYLE / HEX'];
+            const shapeInfo = shape === 'circle' ? 'D ' + Math.min(w, h) + ' / R ' + (Math.min(w, h) / 2) + ' px' :
+                shape === 'rounded_rectangle' ? cornerRadius(w, h) + ' px · all corners' : ratioXY + ' (' + ratioDec + ')';
+            for (let i = 0; i < 3; i++) {
+                const x = bx + (side ? 0 : i * (badgeWidth + 16));
+                const y = by + (side ? i * (badgeHeight + 16) : 0);
+                rounded(x, y, badgeWidth, badgeHeight, 8, boxBg, border);
+                ctx.textAlign = 'center'; ctx.fillStyle = muted;
+                ctx.font = 'bold 18px "JetBrains Mono", monospace';
+                ctx.fillText(labels[i], x + badgeWidth / 2, y + badgeHeight / 2 - 12);
+                ctx.font = 'bold 23px "JetBrains Mono", monospace';
+                ctx.fillStyle = i === 1 ? (isLight ? '#B94700' : '#FF8A33') : textColor;
+                const ty = y + badgeHeight / 2 + 20;
+                if (i < 2) {
+                    ctx.fillText(i === 0 ? w + ' × ' + h : shapeInfo, x + badgeWidth / 2, ty, badgeWidth - 24);
+                } else if (styleMode === 'image') {
+                    ctx.font = 'bold 18px "JetBrains Mono", monospace';
+                    const background = document.getElementById('input-image-background').value;
+                    const imageLabel = uploadedImage ? 'IMAGE' : 'NO IMAGE';
+                    ctx.fillText(imageLabel + ' · ' + (background === 'solid' ? document.getElementById('input-image-background-color').value.toUpperCase() : 'TRANSPARENT'), x + badgeWidth / 2, ty, badgeWidth - 24);
+                } else if (styleMode === 'uv_grid') {
+                    ctx.fillText(isUVColorized ? 'UV COLOR' : 'UV MONO', x + badgeWidth / 2, ty);
+                } else {
+                    ctx.font = 'bold 19px "JetBrains Mono", monospace';
+                    const colors = styleMode === 'gradient' ? [c1, c2] : [c1];
+                    const groupWidth = colors.length === 2 ? 286 : 128;
+                    colors.forEach((color, index) => {
+                        const left = x + (badgeWidth - groupWidth) / 2 + index * 144;
+                        rounded(left, ty - 16, 16, 16, 2, color, border);
+                        ctx.fillStyle = textColor;ctx.textAlign = 'left';
+                        ctx.fillText(color.toUpperCase(), left + 23, ty, 114);
+                    });
+                    if (styleMode === 'gradient') {
+                        ctx.textAlign = 'center';ctx.fillStyle = muted;ctx.font = '16px "JetBrains Mono", monospace';
+                        ctx.fillText(angle + '°', x + badgeWidth / 2, ty + 20);
+                    }
+                }
+            }
+            ctx.textAlign = 'left';
 
             return canvas;
         }
 
         function exportGuidelinePNG() {
+            if (!imageReadyForExport()) return;
             const canvas = createGuidelineCardCanvas();
+            if (!canvas) return;
             const link = document.createElement('a');
             link.download = `Guideline_${document.getElementById('guideline-title').value || 'Spec'}.png`;
             link.href = canvas.toDataURL('image/png');
@@ -1209,16 +3138,18 @@
             showToast("Guideline Card Downloaded", "Ready for CI documentation");
         }
 
-        function copyGuidelineImage() {
-            const canvas = createGuidelineCardCanvas();
-            canvas.toBlob(blob => {
-                if (navigator.clipboard && window.ClipboardItem) {
-                    const item = new ClipboardItem({ "image/png": blob });
-                    navigator.clipboard.write([item]).then(() => {
-                        showToast("Copied Card Image", "Pasted directly into Docs or Figma");
-                    });
-                }
-            });
+        async function copyGuidelineImage() {
+            if (!imageReadyForExport()) return;
+            try {
+                if (!navigator.clipboard || !window.ClipboardItem) throw new Error('Unavailable');
+                const canvas = createGuidelineCardCanvas();
+                if (!canvas) return;
+                const blob = new Promise((resolve, reject) => canvas.toBlob(value => value ? resolve(value) : reject(new Error('PNG failed')), 'image/png'));
+                await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                showToast('Copied Card Image', 'Ready to paste into Docs or Figma');
+            } catch (error) {
+                showToast('Unable to copy image', 'Use Download PNG, or allow clipboard access.');
+            }
         }
 
         function syncHexColor(source) {
@@ -1241,7 +3172,7 @@
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(text).then(() => {
                     showToast("Copied to Clipboard", `${label}: ${text}`);
-                });
+                }).catch(() => showToast("Unable to copy", "Allow clipboard access and try again."));
             } else {
                 const textArea = document.createElement("textarea");
                 textArea.value = text;
@@ -1251,7 +3182,7 @@
                 textArea.focus();
                 textArea.select();
                 try {
-                    document.execCommand('copy');
+                    if (!document.execCommand('copy')) throw new Error('Copy failed');
                     showToast("Copied to Clipboard", `${label}: ${text}`);
                 } catch (err) {
                     showToast("Error", "Failed to copy.");
@@ -1261,12 +3192,24 @@
         }
 
         function downloadCurrentSlate() {
-            const w = parseInt(document.getElementById('input-width').value) || 1080;
-            const h = parseInt(document.getElementById('input-height').value) || 1080;
+            const dimensions = readDimensions();
+            if (!dimensions) { showToast('Invalid dimensions', 'Use whole pixels from 1 to 20000.'); return; }
+            const { w, h } = dimensions;
             generateBlankSlatePNG(w, h, `Slate_${w}x${h}.png`);
         }
 
         function resetConsoleInputs() {
+            document.getElementById('input-image-background').value = 'transparent';
+            document.getElementById('input-image-background-color').value = '#ffffff';
+            document.getElementById('input-image-background-hex').value = '#FFFFFF';
+            document.getElementById('input-corner-radius').value = 64;
+            ++imageLoadVersion;
+            uploadedImage = null;
+            document.getElementById('input-image-file').value = '';
+            document.getElementById('image-status').textContent = 'Choose an image. It stays on your device.';
+            document.getElementById('input-image-x').value = 0;
+            document.getElementById('input-image-y').value = 0;
+            document.getElementById('input-image-scale').value = 100;
             document.getElementById('input-width').value = 1080;
             document.getElementById('input-height').value = 1080;
             document.getElementById('input-ratio-xy').value = "1:1";
@@ -1275,6 +3218,16 @@
             document.getElementById('input-bg-style').value = "solid";
             document.getElementById('input-hex-color').value = "#FFFFFF";
             document.getElementById('input-hex-text').value = "#FFFFFF";
+            document.getElementById('input-hex-color2').value = '#FF6B00';
+            document.getElementById('input-grad-angle').value = 135;
+            document.getElementById('angle-val').innerText = '135';
+            document.getElementById('input-uv-colorized').checked = true;
+            document.getElementById('input-uv-mode').value = 'subdivisions';
+            document.getElementById('input-uv-divs').value = 8;
+            document.getElementById('uv-div-val').innerText = '8';
+            document.getElementById('uv-div-val2').innerText = '8';
+            document.getElementById('input-uv-px').value = 100;
+            toggleUVSizeMode();
             toggleStyleControls();
             showToast("Workbench Reset", "Inputs reset to 1080x1080 (1:1)");
         }
@@ -1338,9 +3291,104 @@
             renderTabContent(tabKey);
         }
 
+        function presetIcon(name, tabKey) {
+            if (/emoji/i.test(name)) return 'fa-regular fa-face-smile';
+            if (/badge|watermark/i.test(name)) return 'fa-solid fa-certificate';
+            if (/podcast/i.test(name)) return 'fa-solid fa-microphone';
+            if (/shorts|vertical/i.test(name)) return 'fa-solid fa-mobile-screen';
+            if (/team/i.test(name)) return 'fa-solid fa-users';
+            if (/avatar|profile picture|profile photo/i.test(name)) return 'fa-regular fa-user';
+            if (/highlight/i.test(name)) return 'fa-regular fa-star';
+            if (/event/i.test(name)) return 'fa-regular fa-calendar';
+            if (/carousel/i.test(name)) return 'fa-solid fa-images';
+            if (/story/i.test(name)) return 'fa-solid fa-mobile-screen';
+            if (/video|reel/i.test(name) || tabKey === 'cinema') return 'fa-solid fa-film';
+            if (/cover|banner|header/i.test(name)) return 'fa-regular fa-image';
+            if (/project/i.test(name)) return 'fa-solid fa-folder-open';
+            if (/post|photo|shot/i.test(name)) return 'fa-regular fa-image';
+            if (/web card/i.test(name)) return 'fa-regular fa-window-maximize';
+            return '';
+        }
+
+        // Deliberately approximate composition guides, not official UI templates.
+        // Eligibility is placement-specific; never infer it from resolution alone.
+        function presetSafeZone(tabKey, item) {
+            if (tabKey === 'cinema' || tabKey === 'paper') return null;
+            const name = item.name;
+            if (/thumbnail|cover|photo|carousel|image|avatar|profile|live/i.test(name)) return null;
+            let margins, source;
+            if (['facebook', 'instagram'].includes(tabKey) && /reel|story/i.test(name)) {
+                margins = /reel/i.test(name) ? [0.15, 0.35, 0.08, 0.08] : [0.15, 0.20, 0.06, 0.06];
+                source = 'https://www.facebook.com/business/ads/facebook-instagram-reels-ads';
+            } else if (tabKey === 'youtube' && /shorts|vertical video/i.test(name)) {
+                margins = [0.15, 0.30, 0.08, 0.20];
+                source = 'https://support.google.com/google-ads/answer/13547298?hl=en';
+            } else if (tabKey === 'tiktok' && /video|story|ad/i.test(name)) {
+                margins = item.h > item.w ? [0.15, 0.35, 0.08, 0.20] : [0.12, 0.25, 0.08, 0.15];
+                source = 'https://ads.tiktok.com/help/article/tiktok-auction-in-feed-ads';
+            } else return null;
+            return { margins, source };
+        }
+
+        function createSafeZoneCanvas(tabKey, item) {
+            const guide = presetSafeZone(tabKey, item);
+            if (!guide) return null;
+            const canvas = document.createElement('canvas');
+            canvas.width = item.w; canvas.height = item.h;
+            const ctx = canvas.getContext('2d');
+            const [top, bottom, left, right] = guide.margins;
+            const x = Math.round(item.w * left), y = Math.round(item.h * top);
+            const w = item.w - x - Math.round(item.w * right);
+            const h = item.h - y - Math.round(item.h * bottom);
+            ctx.fillStyle = 'rgba(230, 45, 65, 0.38)';
+            ctx.fillRect(0, 0, item.w, item.h);
+            const line = Math.max(1, Math.round(Math.min(item.w, item.h) / 400));
+            ctx.fillStyle = PLATFORM_DATA[tabKey].color;
+            ctx.fillRect(x - line, y - line, w + line * 2, h + line * 2);
+            // The cutout is completely transparent, including the boundary inside.
+            ctx.clearRect(x, y, w, h);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold ' + Math.max(10, Math.round(item.w / 42)) + 'px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('APPROXIMATE SAFE-ZONE GUIDE', item.w / 2, Math.max(20, y / 2), item.w * 0.90);
+            ctx.font = Math.max(9, Math.round(item.w / 55)) + 'px sans-serif';
+            ctx.fillText('UI / captions vary • check placement preview', item.w / 2, item.h - Math.max(15, item.h * 0.04), item.w * 0.90);
+            return canvas;
+        }
+
+        function downloadPresetSafeZone(tabKey, groupIndex, itemIndex) {
+            if (tabKey === 'cinema' || tabKey === 'paper') return;
+            const preset = PLATFORM_DATA[tabKey]?.categories[groupIndex]?.items[itemIndex];
+            if (!preset) return;
+            const key = tabKey + '-' + groupIndex + '-' + itemIndex;
+            const item = preset.variants ? preset.variants[presetVersions[key] || 0] : preset;
+            const canvas = createSafeZoneCanvas(tabKey, item);
+            if (!canvas) return;
+            canvas.toBlob(blob => {
+                if (!blob) { showToast('Export failed', 'Could not generate safe-zone PNG.'); return; }
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = tabKey + '_' + item.name.replace(/[^a-z0-9]+/gi, '_') + '_SafeZone_GUIDE_' + item.w + 'x' + item.h + '.png';
+                link.href = url;document.body.appendChild(link);link.click();link.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+                showToast('Safe-zone overlay downloaded', item.w + ' × ' + item.h + ' PNG · transparent center');
+            }, 'image/png');
+        }
+
+        const presetVersions = {};
+        function choosePresetVersion(key, value) {
+            presetVersions[key] = Number(value);
+            const top = window.scrollY;
+            renderTabContent(activeTab);
+            window.scrollTo(0, top);
+            const select = document.querySelector('[data-version-key="' + key + '"]');
+            if (select) select.focus({ preventScroll: true });
+        }
+
         function renderTabContent(tabKey) {
             const container = document.getElementById('tab-content');
             const platform = PLATFORM_DATA[tabKey];
+            container.style.setProperty('--tab-accent', platform.color);
 
             if (!platform) return;
 
@@ -1350,19 +3398,19 @@
                         <i class="${platform.icon} text-2xl" style="color: ${platform.color}"></i>
                         <div>
                             <h2 class="text-base font-bold text-gray-100">${platform.title}</h2>
-                            <p class="text-xs text-resolve-muted">Verified Social & Production Formats</p>
                         </div>
                     </div>
                     <div>
                         <a href="${platform.guideLink}" target="_blank" rel="noopener noreferrer" 
                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold text-white transition shadow-sm hover:opacity-90"
-                           style="background-color: ${platform.color}">
+                           style="background-color: ${platform.color};${tabKey === 'tiktok' ? 'color: #121214;' : ''}">
                             <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> ${platform.guideLabel}
                         </a>
                     </div>
                 </div>
             `;
 
+            if (platform.presetNotice) html += `<p class="text-xs text-resolve-muted mb-4">${platform.presetNotice}</p>`;
             if (tabKey === 'paper') {
                 html += renderPaperSection(platform.color);
                 container.innerHTML = html;
@@ -1370,22 +3418,31 @@
                 return;
             }
 
+            if (tabKey === 'youtube') html += '<p class="text-xs text-resolve-muted mb-4">Checked October 2, 2026. Working canvases are practical choices, not upload requirements. Downloads are PNG slates; file-size limits still apply. Additional guides: <a class="underline" target="_blank" rel="noopener noreferrer" href="https://support.google.com/youtube/answer/12751636?hl=en">Podcasts</a> · <a class="underline" target="_blank" rel="noopener noreferrer" href="https://support.google.com/youtube/answer/15400119?hl=en">Playlists</a> · <a class="underline" target="_blank" rel="noopener noreferrer" href="https://support.google.com/youtube/answer/6388789?hl=en">End screens</a>.</p>';
             html += `<div class="space-y-8">`;
 
-            platform.categories.forEach(group => {
+            platform.categories.forEach((group, groupIndex) => {
                 html += `
                     <div class="bg-resolve-panel border border-resolve-border rounded-xl p-5 shadow-lg">
                         <div class="flex items-center justify-between border-b border-resolve-border pb-3 mb-4">
                             <h3 class="text-xs font-bold text-gray-100 tracking-wide flex items-center gap-2">
                                 <i class="${group.icon}" style="color: ${platform.color}"></i> ${group.category}
                             </h3>
+                            ${group.source ? `<a href="${group.source}" target="_blank" rel="noopener noreferrer" class="text-xs text-resolve-muted underline">Official guide</a>` : ''}
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 `;
 
-                group.items.forEach(item => {
+                group.items.forEach((preset, itemIndex) => {
+                    const versionKey = tabKey + '-' + groupIndex + '-' + itemIndex;
+                    const selectedVersion = presetVersions[versionKey] || 0;
+                    const item = preset.variants ? preset.variants[selectedVersion] : preset;
+                    const previewScale = Math.min(130 / item.w, 75 / item.h);
+                    const safeZone = presetSafeZone(tabKey, item);
                     const isCircle = item.shape === 'circle';
+                    const icon = presetIcon(item.name, tabKey);
+                    const previewIcon = icon ? `<i class="${icon} text-gray-400 text-sm" aria-hidden="true"></i>` : '';
                     
                     html += `
                         <div class="bg-resolve-card border border-resolve-border hover:border-resolve-accent/40 rounded-lg p-4 flex flex-col justify-between transition group">
@@ -1393,11 +3450,22 @@
                             <div>
                                 <div class="flex items-center justify-between mb-2">
                                     <h4 class="text-xs font-bold text-gray-200 group-hover:text-resolve-accent transition-colors flex items-center gap-1">
-                                        ${item.name}
+                                        ${preset.name}
                                     </h4>
-                                    ${isCircle ? '<span class="text-[9px] bg-indigo-500/20 text-indigo-400 font-mono px-1.5 py-0.5 rounded border border-indigo-500/30">CIRCLE</span>' : ''}
+                            <div class="flex shrink-0 gap-1.5 ml-2">
+                                <button onclick="loadIntoConsole(${item.w}, ${item.h}, '${item.shape}')" class="resolve-btn w-8 h-8 rounded text-gray-300 flex items-center justify-center transition" title="Inspect in Workbench">
+                                    <i class="fa-solid fa-arrows-to-eye text-xs text-resolve-accent"></i>
+                                </button>
+                                <button onclick="generateBlankSlatePNG(${item.w}, ${item.h}, '${item.name.replace(/\s+/g, '_')}_${item.w}x${item.h}.png', '${item.shape}')" 
+                                        class="w-8 h-8 rounded text-white flex items-center justify-center shadow transition"
+                                        style="background-color: ${platform.color}" title="Download Blank Slate">
+                                    <i class="fa-solid fa-download text-xs"></i>
+                                </button>
+                            </div>
+
                                 </div>
 
+                                ${preset.variants ? `<select aria-label="Size version for ${preset.name}" data-version-key="${versionKey}" onchange="choosePresetVersion('${versionKey}', this.value)" class="w-full resolve-input rounded px-2 py-1 mb-2 text-xs">${preset.variants.map((v, index) => `<option value="${index}" ${index === selectedVersion ? 'selected' : ''}>${v.name} — ${v.w} × ${v.h}</option>`).join('')}</select>` : ''}
                                 <div class="pill-bg bg-resolve-bg dimmed-card-border rounded px-2.5 py-1.5 flex items-center justify-between font-mono text-xs mb-2">
                                     <div class="flex items-center space-x-1.5">
                                         <button onclick="copyToClipboard('${item.w}', 'Width')" class="hover:text-amber-400 text-gray-200 font-bold transition" title="Copy Width">${item.w}</button>
@@ -1422,37 +3490,29 @@
                                 </div>
                             </div>
 
+                            ${safeZone ? `<div class="mb-2"><button onclick="downloadPresetSafeZone('${tabKey}', ${groupIndex}, ${itemIndex})" class="resolve-btn px-2 py-1 rounded text-[11px]" style="color: var(--tab-accent)" title="Download transparent safe-zone guide PNG"><i class="fa-solid fa-vector-square mr-1" aria-hidden="true"></i> Safe zone PNG</button><p class="text-[10px] text-resolve-muted mt-1">Approximate guide · T ${Math.round(safeZone.margins[0]*100)}% / B ${Math.round(safeZone.margins[1]*100)}% / L ${Math.round(safeZone.margins[2]*100)}% / R ${Math.round(safeZone.margins[3]*100)}%. UI varies. <a href="${safeZone.source}" target="_blank" rel="noopener noreferrer" class="underline">Placement guidance</a></p></div>` : ''}
+                            ${item.note ? `<p class="text-[11px] text-resolve-muted mb-2 leading-relaxed">${item.note}</p>` : ''}
                             <div class="checkerboard-bg rounded h-28 my-1 dimmed-card-border flex items-center justify-center p-2 overflow-hidden">
                                 <div class="flex items-center justify-center w-full h-full">
                                     ${isCircle ? `
                                         <div class="bg-white border-2 border-resolve-accent shadow-md flex items-center justify-center shape-circle-preview"
-                                             style="width: 72px; height: 72px;">
-                                            <i class="fa-regular fa-user text-gray-400 text-sm"></i>
+                                             style="width: 72px; height: 72px; flex: none; box-sizing: border-box;">
+                                            ${previewIcon}
                                         </div>
                                     ` : `
-                                        <div class="bg-white border-2 border-resolve-accent shadow-md rounded-sm"
+                                        <div class="bg-white border-2 border-resolve-accent shadow-md rounded-sm flex items-center justify-center"
                                              style="
-                                                aspect-ratio: ${item.w}/${item.h}; 
-                                                max-height: 75px; 
-                                                max-width: 130px; 
-                                                width: ${item.w >= item.h ? '80%' : 'auto'}; 
-                                                height: ${item.h > item.w ? '80%' : 'auto'};
+                                                width: ${item.w * previewScale}px;
+                                                height: ${item.h * previewScale}px;
+                                                box-sizing: border-box; flex: none;
                                              ">
+                                            ${previewIcon}
                                         </div>
                                     `}
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-2 gap-2 mt-3 pt-2 border-t border-resolve-border">
-                                <button onclick="loadIntoConsole(${item.w}, ${item.h}, '${item.shape}')" class="resolve-btn py-1.5 rounded text-gray-300 flex items-center justify-center transition" title="Inspect in Workbench">
-                                    <i class="fa-solid fa-arrows-to-eye text-xs text-resolve-accent"></i>
-                                </button>
-                                <button onclick="generateBlankSlatePNG(${item.w}, ${item.h}, '${item.name.replace(/\s+/g, '_')}_${item.w}x${item.h}.png')" 
-                                        class="py-1.5 rounded text-white flex items-center justify-center shadow transition"
-                                        style="background-color: ${platform.color}" title="Download Blank Slate">
-                                    <i class="fa-solid fa-download text-xs"></i>
-                                </button>
-                            </div>
+
 
                         </div>
                     `;
@@ -1472,7 +3532,7 @@
         function renderPaperSection(brandColor) {
             return `
                 <div class="bg-resolve-panel border border-resolve-border rounded-xl p-5 shadow-lg">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-resolve-bg p-4 rounded-lg border border-resolve-border mb-6">
+                    <div id="paper-controls" class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-resolve-bg p-4 rounded-lg border border-resolve-border mb-6">
                         <div>
                             <label class="block text-[10px] font-bold text-resolve-muted uppercase tracking-wider mb-1">
                                 Print Resolution (DPI)
@@ -1497,7 +3557,7 @@
                         </div>
                     </div>
 
-                    <div id="paper-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                    <div id="paper-grid" class="space-y-6"></div>
                 </div>
             `;
         }
@@ -1511,9 +3571,18 @@
 
             let html = '';
 
-            PAPER_SIZES.forEach(paper => {
-                const pxW = Math.round(paper.inW * dpi);
-                const pxH = Math.round(paper.inH * dpi);
+            const paperGroups = [
+                ['ISO A Series', p => /^A\d/.test(p.name)],
+                ['ISO B Series', p => /^B\d/.test(p.name)],
+                ['Envelopes', p => /^C\d|^DL /.test(p.name)],
+                ['North American Paper', p => /^US |^Tabloid/.test(p.name)],
+                ['Photo Prints', p => /^Photo /.test(p.name)]
+            ];
+            for (const [title, matches] of paperGroups) {
+                html += `<section class="paper-preset-group"><h3 class="text-xs font-bold text-gray-200 mb-3">${title}</h3><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">`;
+                PAPER_SIZES.filter(matches).forEach(paper => {
+                const pxW = Math.round(paper.mmW / 25.4 * dpi);
+                const pxH = Math.round(paper.mmH / 25.4 * dpi);
 
                 let displayDim = "";
                 if (unit === 'px') displayDim = `${pxW} × ${pxH} px`;
@@ -1524,7 +3593,14 @@
                 html += `
                     <div class="bg-resolve-card border border-resolve-border hover:border-indigo-500/40 rounded-lg p-4 flex flex-col justify-between transition">
                         <div>
-                            <h4 class="text-xs font-bold text-gray-200 mb-2">${paper.name}</h4>
+                            <div class="flex items-center justify-between mb-2"><h4 class="text-xs font-bold text-gray-200">${paper.name}</h4>                        <div class="flex shrink-0 gap-1.5 ml-2">
+                            <button onclick="loadIntoConsole(${pxW}, ${pxH}, 'rectangle')" class="resolve-btn w-8 h-8 rounded text-gray-300 flex items-center justify-center" title="Inspect in Workbench">
+                                <i class="fa-solid fa-arrows-to-eye text-xs text-indigo-400"></i>
+                            </button>
+                            <button onclick="generateBlankSlatePNG(${pxW}, ${pxH}, '${paper.name.replace(/\s+/g, '_')}_${pxW}x${pxH}.png', 'rectangle')" class="bg-indigo-600 hover:bg-indigo-500 w-8 h-8 rounded text-white flex items-center justify-center shadow" title="Download Blank Slate">
+                                <i class="fa-solid fa-download text-xs"></i>
+                            </button>
+                        </div></div>
                             
                             <div class="pill-bg bg-resolve-bg dimmed-card-border rounded px-2.5 py-1.5 flex items-center justify-between font-mono text-xs mb-2">
                                 <span class="text-indigo-400 font-bold">${displayDim}</span>
@@ -1538,22 +3614,17 @@
 
                         <div class="checkerboard-bg rounded h-28 my-1 dimmed-card-border flex items-center justify-center p-2 overflow-hidden">
                             <div class="bg-white border-2 border-indigo-500 shadow-md rounded-sm"
-                                 style="aspect-ratio: ${pxW}/${pxH}; max-height: 75px; max-width: 120px; height: 80%;">
+                                 style="width: ${pxW * Math.min(120 / pxW, 75 / pxH)}px; height: ${pxH * Math.min(120 / pxW, 75 / pxH)}px; box-sizing: border-box; flex: none;">
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-2 mt-3 pt-2 border-t border-resolve-border">
-                            <button onclick="loadIntoConsole(${pxW}, ${pxH}, 'rectangle')" class="resolve-btn py-1.5 rounded text-gray-300 flex items-center justify-center" title="Inspect in Workbench">
-                                <i class="fa-solid fa-arrows-to-eye text-xs text-indigo-400"></i>
-                            </button>
-                            <button onclick="generateBlankSlatePNG(${pxW}, ${pxH}, '${paper.name.replace(/\s+/g, '_')}_${pxW}x${pxH}.png')" class="bg-indigo-600 hover:bg-indigo-500 py-1.5 rounded text-white flex items-center justify-center shadow" title="Download Blank Slate">
-                                <i class="fa-solid fa-download text-xs"></i>
-                            </button>
-                        </div>
+
                     </div>
                 `;
             });
 
+                html += '</div></section>';
+            }
             grid.innerHTML = html;
         }
 
@@ -1575,7 +3646,10 @@
 
             updateConsolePreview();
             switchTab('cinema');
+            // Refresh after web fonts resolve so preview and later exports agree.
+            if (document.fonts) document.fonts.ready.then(updateConsolePreview);
         });
     </script>
 </body>
 </html>
+
