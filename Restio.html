@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RESTIO Spec Generator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts Inter & JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        resolve: {
+                            bg: '#121214',
+                            panel: '#1a1a1e',
+                            header: '#161619',
+                            card: '#202025',
+                            border: 'rgba(255, 255, 255, 0.08)',
+                            accent: '#ff6b00',
+                            accentHover: '#ff8533',
+                            muted: '#80808a'
+                        },
+                        brand: {
+                            cinema: '#d4af37',
+                            facebook: '#1877f2',
+                            instagram: '#e4405f',
+                            tiktok: '#fe2c55',
+                            twitter: '#1da1f2',
+                            dribbble: '#ea4c89',
+                            behance: '#1769ff',
+                            paper: '#6366f1'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(18, 18, 20, 0.5);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2e2e36;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ff6b00;
+        }
+
+        html:not(.dark) {
+            --bg-main: #eef0f3;
+            --bg-panel: #ffffff;
+            --bg-header: #e0e3e8;
+            --bg-card: #e0e3e8;
+            --border-subtle: rgba(0, 0, 0, 0.08);
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+        }
+
+        html:not(.dark) body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+        }
+        html:not(.dark) header, html:not(.dark) nav, html:not(.dark) footer {
+            background-color: var(--bg-header) !important;
+            border-color: var(--border-subtle) !important;
+        }
+        html:not(.dark) section, html:not(.dark) .bg-resolve-panel {
+            background-color: var(--bg-panel) !important;
+            border-color: var(--border-subtle) !important;
+        }
+        html:not(.dark) .bg-resolve-card {
+            background-color: var(--bg-card) !important;
+            border-color: var(--border-subtle) !important;
+        }
+        /* Item 8: Main Monitor properties match light mode header */
+        html:not(.dark) #main-controls-box {
+            background-color: var(--bg-header) !important;
+            border-color: var(--border-subtle) !important;
+        }
+        html:not(.dark) .resolve-input {
+            background-color: #ffffff !important;
+            border-color: rgba(0,0,0,0.12) !important;
+            color: #0f172a !important;
+        }
+        html:not(.dark) .text-resolve-muted {
+            color: var(--text-muted) !important;
+        }
+        html:not(.dark) .text-gray-100, html:not(.dark) .text-gray-200, html:not(.dark) .text-gray-300 {
+            color: #0f172a !important;
+        }
+        html:not(.dark) .pill-bg {
+            background-color: #f1f5f9 !important;
+            border-color: rgba(0,0,0,0.08) !important;
+        }
+
+        .resolve-input {
+            background-color: #121214;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #e4e4e7;
+            transition: all 0.15s ease-in-out;
+        }
+        .resolve-input:focus {
+            border-color: #ff6b00 !important;
+            outline: none;
+            box-shadow: 0 0 0 1px #ff6b00;
+        }
+
+        .resolve-btn {
+            background-color: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.15s ease;
+        }
+        html:not(.dark) .resolve-btn {
+            background-color: rgba(0, 0, 0, 0.03);
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+        .resolve-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        .checkerboard-bg {
+            background-color: #0d0d0f;
+            background-image: 
+                linear-gradient(45deg, #18181c 25%, transparent 25%), 
+                linear-gradient(-45deg, #18181c 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #18181c 75%), 
+                linear-gradient(-45deg, transparent 75%, #18181c 75%);
+            background-size: 16px 16px;
+            background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+        }
+        html:not(.dark) .checkerboard-bg {
+            background-color: #e2e8f0;
+            background-image: 
+                linear-gradient(45deg, #cbd5e1 25%, transparent 25%), 
+                linear-gradient(-45deg, #cbd5e1 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #cbd5e1 75%), 
+                linear-gradient(-45deg, transparent 75%, #cbd5e1 75%);
+        }
+
+        .shape-circle-preview {
+            border-radius: 50% !important;
+            aspect-ratio: 1 / 1 !important;
+            object-fit: cover;
+        }
+
+        .dimmed-card-border {
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        html:not(.dark) .dimmed-card-border {
+            border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        #toast {
+            transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.25s ease;
+        }
+    </style>
+</head>
+<body class="bg-resolve-bg text-resolve-text font-sans antialiased min-h-screen flex flex-col select-none transition-colors duration-200">
+
+    <header class="bg-resolve-header border-b border-resolve-border px-4 py-3 flex items-center justify-between shadow-md">
+        <div class="flex items-center space-x-3">
+            <div class="flex items-center justify-center w-8 h-8 rounded bg-gradient-to-tr from-amber-600 via-resolve-accent to-red-500 shadow-inner">
+                <i class="fa-solid fa-layer-group text-white text-sm"></i>
+            </div>
+            <div>
+                <h1 class="text-base font-bold tracking-wider text-gray-100 flex items-center gap-2 font-mono">
+                    RESTIO <span class="text-xs font-normal text-resolve-muted">by dewiennopp</span>
+                    <span class="text-[10px] bg-resolve-accent/20 text-resolve-accent px-1.5 py-0.5 rounded font-mono uppercase border border-resolve-accent/30 font-semibold">Updated Oct 2026</span>
+                </h1>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <button onclick="toggleTheme()" class="px-3 py-1.5 rounded text-xs bg-resolve-panel hover:bg-resolve-hover border border-resolve-border text-gray-300 flex items-center gap-1.5 transition shadow-sm">
+                <i id="theme-icon" class="fa-solid fa-sun text-amber-400"></i>
+                <span id="theme-text" class="hidden sm:inline font-mono">Light Mode</span>
+            </button>
+        </div>
+    </header>
+
+    <section class="bg-resolve-panel border-b border-resolve-border p-4 shadow-xl">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            
+            <!-- Controls Form (Item 8: Given matching ID for Light Mode consistency) -->
+            <div id="main-controls-box" class="lg:col-span-7 bg-resolve-bg/80 p-4 rounded-lg border border-resolve-border space-y-3">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold text-resolve-muted uppercase tracking-wider mb-1">Width (W)</label>
+                        <input type="number" id="input-width" min="1" max="20000" value="1080" class="w-full resolve-input px-3 py-1.5 rounded font-mono text-xs font-bold">
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-resolve-muted uppercase tracking-wider mb-1">Height (H)</label>
+                        <input type="number" id="input-height" min="1" max="20000" value="1080" class="w-full resolve-input px-3 py-1.5 rounded font-mono text-xs font-bold">
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-resolve-muted uppercase tracking-wider mb-1">Ratio (X:Y)</label>
+                        <input type="text" id="input-ratio-xy" value="1:1" placeholder="16:9" class="w-full resolve-input px-3 py-1.5 rounded font-mono text-xs font-bold text-resolve-accent">
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-resolve-muted uppercase tracking-wider mb-1">Ratio (X.XX)</label>
+                        <input type="number" id="input-ratio-dec" step="0.01" value="1.00" placeholder="1.78" class="w-full resolve-input px-3 py-1.5 rounded font-mono text-xs font-bold text-resolve-accent">
+                    </div>
+                </div>
+
+                <!-- Style & Property Controls -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-resolve-border/50">
+                    <div>
+                        <label class="block text-[10px] font-bold text-resolve-muted uppercase tracking-wider mb-1">Shape</label>
+                        <select id="input-shape" class="w-full resolve-input px-2 py-1.5 rounded text-xs cursor-pointer font-medium">
+                            <option value="rectangle">Rectangle</option>
+                            <option value="circle">Circle / Avatar</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-resolve-muted uppercase tracking-wider mb-1">Style Mode</label>
+                        <select id="input-bg-style" onchange="toggleStyleControls()" class="w-full resolve-input px-2 py-1.5 rounded text-xs cursor-pointer font-medium text-amber-400">
+                            <option value="solid">Solid Color</option>
+                            <option value="gradient">Gradient</option>
+                            <option value="uv_grid">UV Grid Pattern</option>
+                        </select>
+                    </div>
+
+                    <div id="color-picker-solid">
+                        <label class="block text-[10px] font-bold text-resolve-muted uppercase tracking-wider mb-1">Color (HEX)</label>
+                        <div class="flex items-center space-x-1.5">
+                            <input type="color" id="input-hex-color" value="#FFFFFF" class="w-8 h-7 bg-transparent rounded cursor-pointer border border-resolve-border">
+                            <input type="text" id="input-hex-text" value="#FFFFFF" class="w-full resolve-input px-2 py-1 rounded font-mono text-[11px] font-bold uppercase">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gradient Controls -->
+                <div id="gradient-controls" class="hidden grid grid-cols-3 gap-2 p-2 bg-resolve-panel rounded border border-resolve-border">
+                    <div>
+                        <label class="block text-[9px] font-bold text-resolve-muted uppercase">Color 2</label>
+                        <input type="color" id="input-hex-color2" value="#FF6B00" class="w-full h-6 bg-transparent rounded cursor-pointer border border-resolve-border">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-[9px] font-bold text-resolve-muted uppercase">Angle (<span id="angle-val">135</span>°)</label>
+                        <input type="range" id="input-grad-angle" min="0" max="360" value="135" class="w-full accent-resolve-accent">
+                    </div>
+                </div>
+
+                <!-- Merged UV Grid Customization Controls -->
+                <div id="uv-controls" class="hidden space-y-2 p-2 bg-resolve-panel rounded border border-resolve-border">
+                    <div class="flex items-center justify-between border-b border-resolve-border/50 pb-1.5">
+                        <span class="text-[10px] font-bold text-amber-400 uppercase tracking-wider">UV Grid Settings</span>
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="input-uv-colorized" class="sr-only peer" checked onchange="updateConsolePreview()">
+                            <div class="w-8 h-4 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-resolve-accent relative"></div>
+                            <span class="ml-1.5 text-[10px] font-bold font-mono text-resolve-muted peer-checked:text-gray-200">Colorized</span>
+                        </label>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[9px] font-bold text-resolve-muted uppercase">Grid Size Mode</label>
+                            <select id="input-uv-mode" onchange="toggleUVSizeMode(); updateConsolePreview();" class="w-full resolve-input px-1.5 py-1 rounded text-[11px] font-medium">
+                                <option value="subdivisions">Columns / Rows</option>
+                                <option value="pixels">Square Size (px)</option>
+                            </select>
+                        </div>
+                        <div id="uv-subdiv-box">
+                            <label class="block text-[9px] font-bold text-resolve-muted uppercase">Divisions (<span id="uv-div-val">8</span>x<span id="uv-div-val2">8</span>)</label>
+                            <input type="range" id="input-uv-divs" min="2" max="32" step="2" value="8" class="w-full accent-resolve-accent" oninput="document.getElementById('uv-div-val').innerText=this.value; document.getElementById('uv-div-val2').innerText=this.value; updateConsolePreview();">
+                        </div>
+                        <div id="uv-pxsize-box" class="hidden">
+                            <label class="block text-[9px] font-bold text-resolve-muted uppercase">Square Size (px)</label>
+                            <input type="number" id="input-uv-px" min="8" max="512" value="100" class="w-full resolve-input px-2 py-0.5 rounded font-mono text-xs font-bold" oninput="updateConsolePreview()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center justify-between pt-2">
+                    <!-- Item 1: Renamed label -->
+                    <button onclick="toggleDrawer()" class="text-xs font-semibold text-resolve-accent hover:text-amber-400 flex items-center gap-1.5 transition">
+                        <i id="drawer-chevron" class="fa-solid fa-chevron-down text-[10px]"></i> Guideline Card Maker
+                    </button>
+                    <div class="flex space-x-2">
+                        <button onclick="resetConsoleInputs()" class="resolve-btn px-3 py-1.5 rounded text-xs text-resolve-muted hover:text-red-400 flex items-center justify-center" title="Reset Workbench">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </button>
+                        <button onclick="downloadCurrentSlate()" class="bg-resolve-accent hover:bg-resolve-accentHover text-white px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1.5 shadow transition">
+                            <i class="fa-solid fa-download"></i> Download Slate
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic Live Preview Monitor -->
+            <div class="lg:col-span-5 flex flex-col items-center justify-center">
+                <div class="w-full h-52 checkerboard-bg rounded-lg border border-resolve-border flex items-center justify-center p-3 relative overflow-hidden shadow-inner">
+                    <div id="preview-box-container" class="transition-all duration-200 flex items-center justify-center relative overflow-hidden">
+                        <canvas id="preview-canvas" class="w-full h-full drop-shadow-md"></canvas>
+                    </div>
+
+                    <div class="absolute bottom-2 right-2 bg-resolve-bg/90 border border-resolve-border px-2 py-1 rounded text-[10px] font-mono text-gray-300 shadow flex items-center space-x-2">
+                        <span id="preview-circle-metrics" class="hidden text-amber-400 font-semibold"></span>
+                        <span id="preview-dimensions-tag">1080 × 1080 px</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Collapsible Custom Guideline Drawer -->
+        <div id="guideline-drawer" class="max-w-7xl mx-auto mt-4 hidden bg-resolve-bg p-4 rounded-lg border border-resolve-accent/30 shadow-2xl transition-all">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-4 pb-3 border-b border-resolve-border">
+                <div class="w-full md:w-1/4">
+                    <label class="block text-[10px] font-bold text-resolve-muted uppercase tracking-wider mb-1">Custom Guideline Title</label>
+                    <input type="text" id="guideline-title" value="Brand Media Spec" placeholder="e.g. Hero Banner Spec" class="w-full resolve-input px-3 py-1.5 rounded text-xs font-bold text-amber-400">
+                </div>
+                
+                <!-- Item 3: Info Position selector added alongside Card Theme -->
+                <div class="w-full md:w-1/2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[10px] font-bold text-resolve-muted uppercase tracking-wider mb-1">Card Theme</label>
+                        <select id="card-theme-select" onchange="applyCardTheme()" class="w-full resolve-input px-2 py-1.5 rounded text-xs font-medium">
+                            <option value="dark" selected>Dark Theme</option>
+                            <option value="light">Light Theme</option>
+                            <option value="slate">Slate Theme</option>
+                            <option value="custom">Custom Color Override</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-resolve-muted uppercase tracking-wider mb-1">Info Layout</label>
+                        <select id="card-info-layout" onchange="updateGuidelineCard()" class="w-full resolve-input px-2 py-1.5 rounded text-xs font-medium">
+                            <option value="top">Top Header (Horizontal)</option>
+                            <option value="bottom" selected>Bottom Header (Horizontal)</option>
+                            <option value="left">Left Sidebar (Vertical)</option>
+                            <option value="right">Right Sidebar (Vertical)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Item 5: Custom color inputs live-bind directly -->
+                <div id="card-custom-colors-box" class="hidden w-full md:w-1/3 flex items-center gap-2">
+                    <div class="flex-1">
+                        <label class="block text-[10px] font-bold text-resolve-muted uppercase tracking-wider mb-1">Card BG</label>
+                        <input type="color" id="card-bg-custom" value="#202025" oninput="applyCardTheme()" class="w-full h-8 bg-transparent rounded cursor-pointer border border-resolve-border">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-[10px] font-bold text-resolve-muted uppercase tracking-wider mb-1">Card Text</label>
+                        <input type="color" id="card-text-custom" value="#FFFFFF" oninput="applyCardTheme()" class="w-full h-8 bg-transparent rounded cursor-pointer border border-resolve-border">
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+                    <button onclick="copyGuidelineImage()" class="resolve-btn px-4 py-2 rounded text-xs font-bold text-gray-200 hover:text-white flex items-center gap-1.5 shadow">
+                        <i class="fa-regular fa-copy text-amber-400"></i> Copy Image Card
+                    </button>
+                    <button onclick="exportGuidelinePNG()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded text-xs font-bold flex items-center gap-1.5 shadow">
+                        <i class="fa-solid fa-file-export"></i> Export Image Card
+                    </button>
+                </div>
+            </div>
+
+            <!-- Card Capture Preview Area (Item 7: Standard dark background independent of Global Light/Dark mode) -->
+            <div class="flex justify-center bg-[#121214] p-6 rounded-lg border border-resolve-border">
+                <div id="guideline-card-preview" class="w-full max-w-xl border border-resolve-border rounded-xl p-5 shadow-2xl font-mono transition-colors duration-200 flex flex-col">
+                    
+                    <div id="card-header-zone" class="flex items-center justify-between mb-3 border-b border-resolve-border pb-2">
+                        <!-- Item 2: Dynamic readable text color -->
+                        <h3 id="card-display-title" class="text-sm font-bold tracking-wider">Brand Media Spec</h3>
+                    </div>
+
+                    <div id="card-main-body" class="flex flex-col w-full gap-3">
+                        <!-- Shape Box -->
+                        <div id="card-preview-container" class="checkerboard-bg rounded-lg h-44 flex-1 flex items-center justify-center p-3 relative overflow-hidden border border-resolve-border">
+                            <div id="card-shape-preview" class="border-2 border-resolve-accent shadow-lg transition-all overflow-hidden flex items-center justify-center" style="width: 100px; height: 100px;">
+                                <canvas id="card-shape-canvas" class="w-full h-full object-cover"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Dimension Badges -->
+                        <div id="card-badges-grid" class="grid grid-cols-3 gap-2 text-center text-xs">
+                            <div class="pill-bg p-2 rounded border border-resolve-border flex flex-col justify-center" style="background-color: rgba(0,0,0,0.15)">
+                                <div class="text-[9px] text-resolve-muted uppercase">Resolution</div>
+                                <div id="card-dim" class="font-bold">1080 × 1080</div>
+                            </div>
+                            <div class="pill-bg p-2 rounded border border-resolve-border flex flex-col justify-center" style="background-color: rgba(0,0,0,0.15)">
+                                <div class="text-[9px] text-resolve-muted uppercase">Ratio</div>
+                                <div id="card-ratio" class="font-bold text-resolve-accent">1:1 (1.00)</div>
+                            </div>
+                            <!-- Items 4 & 5: Styled color blocks with hex text -->
+                            <div class="pill-bg p-2 rounded border border-resolve-border flex flex-col justify-center" style="background-color: rgba(0,0,0,0.15)">
+                                <div class="text-[9px] text-resolve-muted uppercase mb-0.5">Style / HEX</div>
+                                <div id="card-hex" class="font-bold text-xs flex items-center justify-center gap-1 flex-wrap">#FFFFFF</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <nav class="bg-resolve-header border-b border-resolve-border px-4 pt-2">
+        <div class="max-w-7xl mx-auto flex items-center space-x-1 overflow-x-auto no-scrollbar">
+            <!-- Item 9: Tab buttons colored matching social branding directly for high visibility -->
+            <button onclick="switchTab('cinema')" id="tab-cinema" class="tab-btn px-3.5 py-2.5 rounded-t text-xs font-bold flex items-center gap-2 border-b-2 border-transparent hover:bg-resolve-panel transition text-brand-cinema">
+                <i class="fa-solid fa-film text-brand-cinema"></i> Cinema & Video
+            </button>
+            <button onclick="switchTab('facebook')" id="tab-facebook" class="tab-btn px-3.5 py-2.5 rounded-t text-xs font-bold flex items-center gap-2 border-b-2 border-transparent hover:bg-resolve-panel transition text-brand-facebook">
+                <i class="fa-brands fa-facebook text-brand-facebook"></i> Facebook
+            </button>
+            <button onclick="switchTab('instagram')" id="tab-instagram" class="tab-btn px-3.5 py-2.5 rounded-t text-xs font-bold flex items-center gap-2 border-b-2 border-transparent hover:bg-resolve-panel transition text-brand-instagram">
+                <i class="fa-brands fa-instagram text-brand-instagram"></i> Instagram
+            </button>
+            <button onclick="switchTab('tiktok')" id="tab-tiktok" class="tab-btn px-3.5 py-2.5 rounded-t text-xs font-bold flex items-center gap-2 border-b-2 border-transparent hover:bg-resolve-panel transition text-brand-tiktok">
+                <i class="fa-brands fa-tiktok text-brand-tiktok"></i> TikTok
+            </button>
+            <button onclick="switchTab('twitter')" id="tab-twitter" class="tab-btn px-3.5 py-2.5 rounded-t text-xs font-bold flex items-center gap-2 border-b-2 border-transparent hover:bg-resolve-panel transition text-brand-twitter">
+                <i class="fa-brands fa-x-twitter text-brand-twitter"></i> Twitter / X
+            </button>
+            <button onclick="switchTab('dribbble')" id="tab-dribbble" class="tab-btn px-3.5 py-2.5 rounded-t text-xs font-bold flex items-center gap-2 border-b-2 border-transparent hover:bg-resolve-panel transition text-brand-dribbble">
+                <i class="fa-brands fa-dribbble text-brand-dribbble"></i> Dribbble
+            </button>
+            <button onclick="switchTab('behance')" id="tab-behance" class="tab-btn px-3.5 py-2.5 rounded-t text-xs font-bold flex items-center gap-2 border-b-2 border-transparent hover:bg-resolve-panel transition text-brand-behance">
+                <i class="fa-brands fa-behance text-brand-behance"></i> Behance
+            </button>
+            <button onclick="switchTab('paper')" id="tab-paper" class="tab-btn px-3.5 py-2.5 rounded-t text-xs font-bold flex items-center gap-2 border-b-2 border-transparent hover:bg-resolve-panel transition text-brand-paper">
+                <i class="fa-solid fa-file-lines text-brand-paper"></i> Paper Formats
+            </button>
+        </div>
+    </nav>
+
+    <main class="flex-1 p-4 md:p-6 max-w-7xl w-full mx-auto overflow-y-auto">
+        <div id="tab-content"></div>
+    </main>
+
+    <footer class="bg-resolve-header border-t border-resolve-border px-4 py-2.5 text-[11px] text-resolve-muted flex items-center justify-between font-mono">
+        <div class="flex items-center space-x-4">
+            <span><i class="fa-solid fa-circle text-[8px] text-emerald-500 mr-1.5"></i>RESTIO Engine Active</span>
+        </div>
+        <div>
+            <span>RESTIO by dewiennopp</span>
+        </div>
+    </footer>
+
+    <div id="toast" class="fixed bottom-8 right-6 translate-y-16 opacity-0 bg-resolve-card border border-resolve-accent text-white px-4 py-2.5 rounded-lg shadow-2xl flex items-center space-x-3 z-50 pointer-events-none">
+        <div class="w-7 h-7 rounded-full bg-resolve-accent/20 flex items-center justify-center text-resolve-accent">
+            <i id="toast-icon" class="fa-solid fa-check text-xs"></i>
+        </div>
+        <div>
+            <div id="toast-title" class="text-xs font-bold text-gray-100">Copied</div>
+            <div id="toast-msg" class="text-[11px] text-resolve-muted">Clipboard updated.</div>
+        </div>
+    </div>
+
+    <script>
+        const PLATFORM_DATA = {
+            cinema: {
+                title: "Cinema & Video Standards",
+                icon: "fa-solid fa-film",
+                color: "#d4af37",
+                guideLink: "https://www.dcimovies.com/specifications/",
+                guideLabel: "DCI Specifications",
+                categories: [
+                    {
+                        category: "Cinema & Production Formats",
+                        icon: "fa-solid fa-video",
+                        items: [
+                            { name: "Anamorphic Widescreen", w: 3840, h: 1608, ratio: "21:9", dec: "2.39", shape: "rectangle" },
+                            { name: "DCI 4K Full Container", w: 4096, h: 2160, ratio: "1.90:1", dec: "1.90", shape: "rectangle" },
+                            { name: "Standard Ultra HD (16:9)", w: 3840, h: 2160, ratio: "16:9", dec: "1.78", shape: "rectangle" },
+                            { name: "Full HD Video (16:9)", w: 1920, h: 1080, ratio: "16:9", dec: "1.78", shape: "rectangle" },
+                            { name: "IMAX Digital Frame", w: 3840, h: 2685, ratio: "1.43:1", dec: "1.43", shape: "rectangle" },
+                            { name: "Classic Broadcast (4:3)", w: 1440, h: 1080, ratio: "4:3", dec: "1.33", shape: "rectangle" }
+                        ]
+                    }
+                ]
+            },
+            facebook: {
+                title: "Facebook Specs & Ad Guidelines",
+                icon: "fa-brands fa-facebook",
+                color: "#1877f2",
+                guideLink: "https://www.facebook.com/business/ads-guide/update",
+                guideLabel: "Facebook Ads Guide",
+                categories: [
+                    {
+                        category: "Posts & Stories",
+                        icon: "fa-regular fa-newspaper",
+                        items: [
+                            { name: "Square Post", w: 1200, h: 1200, ratio: "1:1", dec: "1.00", shape: "rectangle" },
+                            { name: "Landscape Post", w: 1200, h: 630, ratio: "1.91:1", dec: "1.91", shape: "rectangle" },
+                            { name: "Portrait Post", w: 1080, h: 1350, ratio: "4:5", dec: "0.80", shape: "rectangle" },
+                            { name: "Facebook Story", w: 1080, h: 1920, ratio: "9:16", dec: "0.56", shape: "rectangle" }
+                        ]
+                    },
+                    {
+                        category: "General & Profiles",
+                        icon: "fa-solid fa-address-book",
+                        items: [
+                            { name: "Profile Picture", w: 720, h: 720, ratio: "1:1", dec: "1.00", shape: "circle" },
+                            { name: "Business Page Cover", w: 1200, h: 674, ratio: "16:9", dec: "1.78", shape: "rectangle" },
+                            { name: "Event Cover Image", w: 1200, h: 628, ratio: "1.91:1", dec: "1.91", shape: "rectangle" },
+                            { name: "Profile Cover Photo", w: 851, h: 315, ratio: "2.7:1", dec: "2.70", shape: "rectangle" }
+                        ]
+                    }
+                ]
+            },
+            instagram: {
+                title: "Instagram Post & Reel Formats",
+                icon: "fa-brands fa-instagram",
+                color: "#e4405f",
+                guideLink: "https://www.google.com/search?q=Instagram+image+and+video+format+specifications+guide",
+                guideLabel: "Instagram Spec Search",
+                categories: [
+                    {
+                        category: "Post Formats",
+                        icon: "fa-regular fa-image",
+                        items: [
+                            { name: "Square Post", w: 1080, h: 1080, ratio: "1:1", dec: "1.00", shape: "rectangle" },
+                            { name: "Landscape Post", w: 1080, h: 566, ratio: "1.91:1", dec: "1.91", shape: "rectangle" },
+                            { name: "Portrait Post", w: 1080, h: 1350, ratio: "4:5", dec: "0.80", shape: "rectangle" }
+                        ]
+                    },
+                    {
+                        category: "Reels & Avatars",
+                        icon: "fa-solid fa-video",
+                        items: [
+                            { name: "Full Screen Reel", w: 1080, h: 1920, ratio: "9:16", dec: "0.56", shape: "rectangle" },
+                            { name: "Story (+ADS)", w: 1080, h: 1920, ratio: "9:16", dec: "0.56", shape: "rectangle" },
+                            { name: "Profile Picture", w: 320, h: 320, ratio: "1:1", dec: "1.00", shape: "circle" },
+                            { name: "Highlight Icon", w: 400, h: 400, ratio: "1:1", dec: "1.00", shape: "circle" }
+                        ]
+                    }
+                ]
+            },
+            tiktok: {
+                title: "TikTok Creation & Resolution Guide",
+                icon: "fa-brands fa-tiktok",
+                color: "#fe2c55",
+                guideLink: "https://www.google.com/search?q=TikTok+video+format+and+resolution+specifications+guide",
+                guideLabel: "TikTok Spec Search",
+                categories: [
+                    {
+                        category: "Video & Live Formats",
+                        icon: "fa-solid fa-mobile-screen-button",
+                        items: [
+                            { name: "Vertical Video (In-Feed)", w: 1080, h: 1920, ratio: "9:16", dec: "0.56", shape: "rectangle" },
+                            { name: "TikTok Story Video", w: 1080, h: 1920, ratio: "9:16", dec: "0.56", shape: "rectangle" },
+                            { name: "Carousel Post Photo", w: 1080, h: 1920, ratio: "9:16", dec: "0.56", shape: "rectangle" }
+                        ]
+                    },
+                    {
+                        category: "Profile & Avatar",
+                        icon: "fa-regular fa-user",
+                        items: [
+                            { name: "Profile Photo Avatar", w: 200, h: 200, ratio: "1:1", dec: "1.00", shape: "circle" },
+                            { name: "Video Cover Thumbnail", w: 1080, h: 1920, ratio: "9:16", dec: "0.56", shape: "rectangle" }
+                        ]
+                    }
+                ]
+            },
+            twitter: {
+                title: "Twitter / X Media Standards",
+                icon: "fa-brands fa-x-twitter",
+                color: "#1da1f2",
+                guideLink: "https://www.google.com/search?q=X+Twitter+media+upload+image+and+video+specs",
+                guideLabel: "X Spec Search",
+                categories: [
+                    {
+                        category: "Feeds & Cards",
+                        icon: "fa-regular fa-images",
+                        items: [
+                            { name: "In-Stream Photo (16:9)", w: 1600, h: 900, ratio: "16:9", dec: "1.78", shape: "rectangle" },
+                            { name: "Square Image Post", w: 1080, h: 1080, ratio: "1:1", dec: "1.00", shape: "rectangle" },
+                            { name: "Portrait Image Post", w: 1080, h: 1350, ratio: "4:5", dec: "0.80", shape: "rectangle" },
+                            { name: "Web Card Image", w: 1200, h: 628, ratio: "1.91:1", dec: "1.91", shape: "rectangle" }
+                        ]
+                    },
+                    {
+                        category: "Header & Profile",
+                        icon: "fa-solid fa-id-card",
+                        items: [
+                            { name: "Profile Picture", w: 400, h: 400, ratio: "1:1", dec: "1.00", shape: "circle" },
+                            { name: "Header Banner", w: 1500, h: 500, ratio: "3:1", dec: "3.00", shape: "rectangle" }
+                        ]
+                    }
+                ]
+            },
+            dribbble: {
+                title: "Dribbble Shot Guidelines",
+                icon: "fa-brands fa-dribbble",
+                color: "#ea4c89",
+                guideLink: "https://www.google.com/search?q=Dribbble+shot+dimensions+and+image+upload+guidelines",
+                guideLabel: "Dribbble Spec Search",
+                categories: [
+                    {
+                        category: "Shots & Avatars",
+                        icon: "fa-solid fa-palette",
+                        items: [
+                            { name: "Standard Shot HD", w: 1600, h: 1200, ratio: "4:3", dec: "1.33", shape: "rectangle" },
+                            { name: "Shot Preview Square", w: 1200, h: 1200, ratio: "1:1", dec: "1.00", shape: "rectangle" },
+                            { name: "Profile Picture", w: 400, h: 400, ratio: "1:1", dec: "1.00", shape: "circle" },
+                            { name: "Team Avatar", w: 1200, h: 1200, ratio: "1:1", dec: "1.00", shape: "circle" }
+                        ]
+                    }
+                ]
+            },
+            behance: {
+                title: "Behance Formatting & Covers",
+                icon: "fa-brands fa-behance",
+                color: "#1769ff",
+                guideLink: "https://www.google.com/search?q=Behance+project+formatting+and+cover+image+specs",
+                guideLabel: "Behance Spec Search",
+                categories: [
+                    {
+                        category: "Projects & Banners",
+                        icon: "fa-solid fa-box-archive",
+                        items: [
+                            { name: "Project Cover Image", w: 4048, h: 2304, ratio: "16:9", dec: "1.78", shape: "rectangle" },
+                            { name: "Project Content View", w: 1400, h: 1050, ratio: "4:3", dec: "1.33", shape: "rectangle" },
+                            { name: "Profile Banner", w: 1400, h: 425, ratio: "16:5", dec: "3.29", shape: "rectangle" },
+                            { name: "Profile Avatar", w: 500, h: 500, ratio: "1:1", dec: "1.00", shape: "circle" }
+                        ]
+                    }
+                ]
+            },
+            paper: {
+                title: "ISO 216 Print Standards",
+                icon: "fa-solid fa-file-lines",
+                color: "#6366f1",
+                guideLink: "https://en.wikipedia.org/wiki/ISO_216",
+                guideLabel: "ISO 216 Guide",
+                categories: []
+            }
+        };
+
+        const PAPER_SIZES = [
+            { name: "A4 Standard", mmW: 210, mmH: 297, inW: 8.27, inH: 11.69 },
+            { name: "A3 Poster", mmW: 297, mmH: 420, inW: 11.69, inH: 16.54 },
+            { name: "A5 Booklet", mmW: 148, mmH: 210, inW: 5.83, inH: 8.27 },
+            { name: "US Letter", mmW: 215.9, mmH: 279.4, inW: 8.5, inH: 11.0 },
+            { name: "US Legal", mmW: 215.9, mmH: 355.6, inW: 8.5, inH: 14.0 },
+            { name: "Tabloid / Ledger", mmW: 279.4, mmH: 431.8, inW: 11.0, inH: 17.0 }
+        ];
+
+        let activeTab = 'cinema';
+        let isSyncingInputs = false;
+
+        function gcd(a, b) {
+            return b === 0 ? a : gcd(b, a % b);
+        }
+
+        function calculateAspectRatio(w, h) {
+            if (!w || !h || w <= 0 || h <= 0) return { ratio: "N/A", dec: "0.00" };
+            const decVal = (w / h).toFixed(2);
+            
+            if (Math.abs(decVal - 1.78) < 0.02) return { ratio: "16:9", dec: decVal };
+            if (Math.abs(decVal - 0.56) < 0.02) return { ratio: "9:16", dec: decVal };
+            if (Math.abs(decVal - 1.00) < 0.01) return { ratio: "1:1", dec: decVal };
+            if (Math.abs(decVal - 1.33) < 0.02) return { ratio: "4:3", dec: decVal };
+            if (Math.abs(decVal - 0.75) < 0.02) return { ratio: "3:4", dec: decVal };
+            if (Math.abs(decVal - 0.80) < 0.02) return { ratio: "4:5", dec: decVal };
+
+            const divisor = gcd(w, h);
+            const simpleW = w / divisor;
+            const simpleH = h / divisor;
+
+            if (simpleW < 100 && simpleH < 100) {
+                return { ratio: `${simpleW}:${simpleH}`, dec: decVal };
+            }
+            return { ratio: `${decVal}:1`, dec: decVal };
+        }
+
+        function handleInputCalculation(source) {
+            if (isSyncingInputs) return;
+            isSyncingInputs = true;
+
+            const inputW = document.getElementById('input-width');
+            const inputH = document.getElementById('input-height');
+            const inputRatioXY = document.getElementById('input-ratio-xy');
+            const inputRatioDec = document.getElementById('input-ratio-dec');
+
+            let w = parseInt(inputW.value) || 1080;
+            let h = parseInt(inputH.value) || 1080;
+
+            if (source === 'xy') {
+                const parts = inputRatioXY.value.split(':');
+                if (parts.length === 2) {
+                    const rx = parseFloat(parts[0]);
+                    const ry = parseFloat(parts[1]);
+                    if (rx > 0 && ry > 0) {
+                        h = Math.round(w / (rx / ry));
+                        inputH.value = h;
+                        inputRatioDec.value = (rx / ry).toFixed(2);
+                    }
+                }
+            } else if (source === 'dec') {
+                const dec = parseFloat(inputRatioDec.value);
+                if (dec > 0) {
+                    h = Math.round(w / dec);
+                    inputH.value = h;
+                    inputRatioXY.value = `${dec.toFixed(2)}:1`;
+                }
+            } else {
+                const res = calculateAspectRatio(w, h);
+                inputRatioXY.value = res.ratio;
+                inputRatioDec.value = res.dec;
+            }
+
+            isSyncingInputs = false;
+            updateConsolePreview();
+        }
+
+        function toggleStyleControls() {
+            const mode = document.getElementById('input-bg-style').value;
+            const solidBox = document.getElementById('color-picker-solid');
+            const gradBox = document.getElementById('gradient-controls');
+            const uvBox = document.getElementById('uv-controls');
+
+            solidBox.classList.add('hidden');
+            gradBox.classList.add('hidden');
+            uvBox.classList.add('hidden');
+
+            if (mode === 'solid') {
+                solidBox.classList.remove('hidden');
+            } else if (mode === 'gradient') {
+                solidBox.classList.remove('hidden');
+                gradBox.classList.remove('hidden');
+            } else if (mode === 'uv_grid') {
+                uvBox.classList.remove('hidden');
+            }
+            updateConsolePreview();
+        }
+
+        function toggleUVSizeMode() {
+            const mode = document.getElementById('input-uv-mode').value;
+            if (mode === 'subdivisions') {
+                document.getElementById('uv-subdiv-box').classList.remove('hidden');
+                document.getElementById('uv-pxsize-box').classList.add('hidden');
+            } else {
+                document.getElementById('uv-subdiv-box').classList.add('hidden');
+                document.getElementById('uv-pxsize-box').classList.remove('hidden');
+            }
+        }
+
+        /* Item 6: UV Grid Pattern - Center target ring & [U 0.50 | V 0.50] text strictly omitted */
+        function drawStandardUVGrid(ctx, width, height, isColorized, cols = 8, rows = 8) {
+            ctx.save();
+            ctx.fillStyle = isColorized ? '#12131C' : '#0F0F12';
+            ctx.fillRect(0, 0, width, height);
+
+            const cellW = width / cols;
+            const cellH = height / rows;
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const x = c * cellW;
+                    const y = r * cellH;
+
+                    if (isColorized) {
+                        const hue = ((c / cols) * 280 + (r / rows) * 80) % 360;
+                        const sat = 55 + (r % 2) * 20;
+                        const light = ((c + r) % 2 === 0) ? 28 : 20;
+                        ctx.fillStyle = `hsl(${hue}, ${sat}%, ${light}%)`;
+                    } else {
+                        const val = ((c + r) % 2 === 0) ? 35 : 18;
+                        ctx.fillStyle = `rgb(${val}, ${val}, ${val})`;
+                    }
+                    ctx.fillRect(x, y, cellW, cellH);
+
+                    // Cell grid border lines
+                    ctx.strokeStyle = isColorized ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.15)';
+                    ctx.lineWidth = Math.max(1, Math.round(Math.min(width, height) / 800));
+                    ctx.strokeRect(x, y, cellW, cellH);
+
+                    // Row letters A-Z & Column numbers label coordinates
+                    if (cellW > 18 && cellH > 18) {
+                        const rowChar = String.fromCharCode(65 + (r % 26));
+                        const colNum = c + 1;
+                        const labelText = `${rowChar}${colNum}`;
+
+                        const fontSize = Math.max(8, Math.min(cellW, cellH) * 0.28);
+                        ctx.font = `bold ${fontSize}px "JetBrains Mono", monospace`;
+                        ctx.fillStyle = isColorized ? 'rgba(255, 255, 255, 0.85)' : 'rgba(200, 200, 200, 0.7)';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(labelText, x + cellW / 2, y + cellH / 2);
+                    }
+                }
+            }
+
+            // Quadrant Axis Crosshairs
+            const strokeW = Math.max(2, Math.round(Math.min(width, height) / 400));
+            ctx.lineWidth = strokeW;
+
+            // X Center Axis
+            ctx.strokeStyle = isColorized ? '#EF4444' : '#E5E7EB';
+            ctx.beginPath();
+            ctx.moveTo(0, height / 2);
+            ctx.lineTo(width, height / 2);
+            ctx.stroke();
+
+            // Y Center Axis
+            ctx.strokeStyle = isColorized ? '#10B981' : '#9CA3AF';
+            ctx.beginPath();
+            ctx.moveTo(width / 2, 0);
+            ctx.lineTo(width / 2, height);
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        // Trigonometric Gradient Calculation for Degrees Angles
+        function getLinearGradientCoords(angleDeg, width, height) {
+            const rad = (angleDeg - 90) * (Math.PI / 180);
+            const cx = width / 2;
+            const cy = height / 2;
+            
+            const len = Math.abs(width * Math.cos(rad)) + Math.abs(height * Math.sin(rad));
+            const x0 = cx - (Math.cos(rad) * len) / 2;
+            const y0 = cy - (Math.sin(rad) * len) / 2;
+            const x1 = cx + (Math.cos(rad) * len) / 2;
+            const y1 = cy + (Math.sin(rad) * len) / 2;
+
+            return { x0, y0, x1, y1 };
+        }
+
+        function drawShapePatternToCanvas(canvas, width, height, shape, styleMode, c1, c2, angle, isUVColorized, uvMode, uvDivs, uvPx) {
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, width, height);
+
+            ctx.save();
+            if (shape === 'circle') {
+                ctx.beginPath();
+                const radius = Math.min(width, height) / 2;
+                ctx.arc(width / 2, height / 2, radius, 0, Math.PI * 2);
+                ctx.clip();
+            }
+
+            if (styleMode === 'gradient') {
+                const coords = getLinearGradientCoords(angle, width, height);
+                const grad = ctx.createLinearGradient(coords.x0, coords.y0, coords.x1, coords.y1);
+                grad.addColorStop(0, c1);
+                grad.addColorStop(1, c2);
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, width, height);
+            } else if (styleMode === 'uv_grid') {
+                let cols, rows;
+                if (uvMode === 'subdivisions') {
+                    cols = uvDivs;
+                    rows = uvDivs;
+                } else {
+                    cols = Math.max(1, Math.round(width / uvPx));
+                    rows = Math.max(1, Math.round(height / uvPx));
+                }
+                drawStandardUVGrid(ctx, width, height, isUVColorized, cols, rows);
+            } else {
+                ctx.fillStyle = c1;
+                ctx.fillRect(0, 0, width, height);
+            }
+
+            ctx.restore();
+        }
+
+        function updateConsolePreview() {
+            const w = parseInt(document.getElementById('input-width').value) || 1080;
+            const h = parseInt(document.getElementById('input-height').value) || 1080;
+            const shape = document.getElementById('input-shape').value;
+            const styleMode = document.getElementById('input-bg-style').value;
+            const c1 = document.getElementById('input-hex-color').value;
+            const c2 = document.getElementById('input-hex-color2').value;
+            const angle = parseInt(document.getElementById('input-grad-angle').value) || 135;
+
+            const isUVColorized = document.getElementById('input-uv-colorized').checked;
+            const uvMode = document.getElementById('input-uv-mode').value;
+            const uvDivs = parseInt(document.getElementById('input-uv-divs').value) || 8;
+            const uvPx = parseInt(document.getElementById('input-uv-px').value) || 100;
+
+            document.getElementById('preview-dimensions-tag').innerText = `${w} × ${h} px`;
+
+            const circleMetrics = document.getElementById('preview-circle-metrics');
+            const previewContainer = document.getElementById('preview-box-container');
+            const canvas = document.getElementById('preview-canvas');
+
+            const maxDim = 160;
+            let previewW, previewH;
+            if (w >= h) {
+                previewW = maxDim;
+                previewH = Math.max(20, Math.round(maxDim * (h / w)));
+            } else {
+                previewH = maxDim;
+                previewW = Math.max(20, Math.round(maxDim * (w / h)));
+            }
+
+            previewContainer.style.width = `${previewW}px`;
+            previewContainer.style.height = `${previewH}px`;
+
+            drawShapePatternToCanvas(canvas, previewW, previewH, shape, styleMode, c1, c2, angle, isUVColorized, uvMode, uvDivs, uvPx);
+
+            if (shape === 'circle') {
+                circleMetrics.classList.remove('hidden');
+                const d = Math.min(w, h);
+                circleMetrics.innerText = `D: ${d}px | R: ${(d / 2).toFixed(0)}px`;
+            } else {
+                circleMetrics.classList.add('hidden');
+            }
+
+            updateGuidelineCard();
+        }
+
+        function toggleDrawer() {
+            const drawer = document.getElementById('guideline-drawer');
+            const chevron = document.getElementById('drawer-chevron');
+            drawer.classList.toggle('hidden');
+            chevron.classList.toggle('rotate-180');
+        }
+
+        // Helper: Converts HEX to RGB array
+        function hexToRgb(hex) {
+            let c = hex.replace('#', '');
+            if (c.length === 3) c = c.split('').map(x => x + x).join('');
+            const num = parseInt(c, 16);
+            return [num >> 16, (num >> 8) & 255, num & 255];
+        }
+
+        // Helper: Determines high-contrast text color (Black or White) from BG HEX
+        function getContrastYIQ(hexcolor) {
+            try {
+                const [r, g, b] = hexToRgb(hexcolor);
+                const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+                return (yiq >= 128) ? '#000000' : '#FFFFFF';
+            } catch(e) {
+                return '#FFFFFF';
+            }
+        }
+
+        /* Items 5 & 7: Card Color Themes & Immediate Reactive Updates */
+        function applyCardTheme() {
+            const theme = document.getElementById('card-theme-select').value;
+            const card = document.getElementById('guideline-card-preview');
+            const customBox = document.getElementById('card-custom-colors-box');
+
+            if (theme === 'custom') {
+                customBox.classList.remove('hidden');
+                card.style.backgroundColor = document.getElementById('card-bg-custom').value;
+                card.style.color = document.getElementById('card-text-custom').value;
+            } else {
+                customBox.classList.add('hidden');
+                if (theme === 'dark') {
+                    card.style.backgroundColor = '#202025';
+                    card.style.color = '#F3F4F6';
+                } else if (theme === 'light') {
+                    card.style.backgroundColor = '#FFFFFF';
+                    card.style.color = '#0F172A';
+                } else if (theme === 'slate') {
+                    card.style.backgroundColor = '#0F172A';
+                    card.style.color = '#F8FAFC';
+                }
+            }
+            updateGuidelineCard();
+        }
+
+        function updateGuidelineCard() {
+            const title = document.getElementById('guideline-title').value || "Brand Spec";
+            const w = document.getElementById('input-width').value || "1080";
+            const h = document.getElementById('input-height').value || "1080";
+            const ratioXY = document.getElementById('input-ratio-xy').value;
+            const ratioDec = document.getElementById('input-ratio-dec').value;
+            const shape = document.getElementById('input-shape').value;
+            const styleMode = document.getElementById('input-bg-style').value;
+            const c1 = document.getElementById('input-hex-color').value;
+            const c2 = document.getElementById('input-hex-color2').value;
+            const angle = parseInt(document.getElementById('input-grad-angle').value) || 135;
+
+            const isUVColorized = document.getElementById('input-uv-colorized').checked;
+            const uvMode = document.getElementById('input-uv-mode').value;
+            const uvDivs = parseInt(document.getElementById('input-uv-divs').value) || 8;
+            const uvPx = parseInt(document.getElementById('input-uv-px').value) || 100;
+
+            const card = document.getElementById('guideline-card-preview');
+            const displayTitle = document.getElementById('card-display-title');
+            
+            displayTitle.innerText = title;
+
+            // Item 2: Dynamic opposite color for Title to guarantee full readability
+            const currentBg = window.getComputedStyle(card).backgroundColor;
+            // Extract RGB values from CSS string
+            const rgbMatch = currentBg.match(/\d+/g);
+            if (rgbMatch && rgbMatch.length >= 3) {
+                const yiq = ((parseInt(rgbMatch[0]) * 299) + (parseInt(rgbMatch[1]) * 587) + (parseInt(rgbMatch[2]) * 114)) / 1000;
+                displayTitle.style.color = (yiq >= 128) ? '#000000' : '#FFFFFF';
+            } else {
+                displayTitle.style.color = '#FF6B00';
+            }
+
+            // Item 3: Info Layout positioning dynamics
+            const layout = document.getElementById('card-info-layout').value;
+            const headerZone = document.getElementById('card-header-zone');
+            const mainBody = document.getElementById('card-main-body');
+            const badgesGrid = document.getElementById('card-badges-grid');
+
+            if (layout === 'top') {
+                card.className = "w-full max-w-xl border border-resolve-border rounded-xl p-5 shadow-2xl font-mono transition-colors duration-200 flex flex-col";
+                mainBody.className = "flex flex-col w-full gap-3";
+                badgesGrid.className = "grid grid-cols-3 gap-2 text-center text-xs";
+                card.insertBefore(badgesGrid, document.getElementById('card-preview-container'));
+                card.insertBefore(headerZone, badgesGrid);
+            } else if (layout === 'bottom') {
+                card.className = "w-full max-w-xl border border-resolve-border rounded-xl p-5 shadow-2xl font-mono transition-colors duration-200 flex flex-col";
+                mainBody.className = "flex flex-col w-full gap-3";
+                badgesGrid.className = "grid grid-cols-3 gap-2 text-center text-xs";
+                card.insertBefore(headerZone, mainBody);
+                mainBody.appendChild(document.getElementById('card-preview-container'));
+                mainBody.appendChild(badgesGrid);
+            } else if (layout === 'left') {
+                card.className = "w-full max-w-xl border border-resolve-border rounded-xl p-5 shadow-2xl font-mono transition-colors duration-200 flex flex-col";
+                mainBody.className = "flex flex-col md:flex-row-reverse w-full gap-3 items-stretch";
+                badgesGrid.className = "flex flex-col gap-2 text-center text-xs w-full md:w-48";
+                card.insertBefore(headerZone, mainBody);
+                mainBody.appendChild(document.getElementById('card-preview-container'));
+                mainBody.appendChild(badgesGrid);
+            } else if (layout === 'right') {
+                card.className = "w-full max-w-xl border border-resolve-border rounded-xl p-5 shadow-2xl font-mono transition-colors duration-200 flex flex-col";
+                mainBody.className = "flex flex-col md:flex-row w-full gap-3 items-stretch";
+                badgesGrid.className = "flex flex-col gap-2 text-center text-xs w-full md:w-48";
+                card.insertBefore(headerZone, mainBody);
+                mainBody.appendChild(document.getElementById('card-preview-container'));
+                mainBody.appendChild(badgesGrid);
+            }
+
+            document.getElementById('card-dim').innerText = `${w} × ${h}`;
+            document.getElementById('card-ratio').innerText = `${ratioXY} (${ratioDec})`;
+            
+            const shapePreview = document.getElementById('card-shape-preview');
+            shapePreview.style.borderRadius = shape === 'circle' ? '50%' : '4px';
+
+            let maxDim = 110;
+            let pw = w >= h ? maxDim : Math.max(20, Math.round(maxDim * (w / h)));
+            let ph = h > w ? maxDim : Math.max(20, Math.round(maxDim * (h / w)));
+            shapePreview.style.width = `${pw}px`;
+            shapePreview.style.height = `${ph}px`;
+
+            const cardCanvas = document.getElementById('card-shape-canvas');
+            drawShapePatternToCanvas(cardCanvas, pw, ph, shape, styleMode, c1, c2, angle, isUVColorized, uvMode, uvDivs, uvPx);
+
+            // Items 4 & 5: Style / HEX display formatted with color swatches
+            const cardHexContainer = document.getElementById('card-hex');
+            if (styleMode === 'solid') {
+                cardHexContainer.innerHTML = `
+                    <span class="inline-block w-2.5 h-2.5 rounded-sm border border-white/30" style="background-color: ${c1}"></span>
+                    <span style="color: ${c1}">${c1.toUpperCase()}</span>
+                `;
+            } else if (styleMode === 'gradient') {
+                cardHexContainer.innerHTML = `
+                    <div class="flex items-center gap-1">
+                        <span class="inline-block w-2.5 h-2.5 rounded-sm border border-white/30" style="background-color: ${c1}"></span>
+                        <span style="color: ${c1}">${c1.toUpperCase()}</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span class="inline-block w-2.5 h-2.5 rounded-sm border border-white/30" style="background-color: ${c2}"></span>
+                        <span style="color: ${c2}">${c2.toUpperCase()}</span>
+                    </div>
+                    <span class="text-[10px] opacity-80">${angle}°</span>
+                `;
+            } else {
+                cardHexContainer.innerText = isUVColorized ? 'UV COLOR' : 'UV MONO';
+            }
+        }
+
+        function generateBlankSlatePNG(width, height, filename) {
+            const canvas = document.createElement('canvas');
+            const shape = document.getElementById('input-shape').value;
+            const styleMode = document.getElementById('input-bg-style').value;
+            const c1 = document.getElementById('input-hex-color').value || '#FFFFFF';
+            const c2 = document.getElementById('input-hex-color2').value || '#FF6B00';
+            const angle = parseInt(document.getElementById('input-grad-angle').value) || 135;
+
+            const isUVColorized = document.getElementById('input-uv-colorized').checked;
+            const uvMode = document.getElementById('input-uv-mode').value;
+            const uvDivs = parseInt(document.getElementById('input-uv-divs').value) || 8;
+            const uvPx = parseInt(document.getElementById('input-uv-px').value) || 100;
+
+            drawShapePatternToCanvas(canvas, width, height, shape, styleMode, c1, c2, angle, isUVColorized, uvMode, uvDivs, uvPx);
+
+            const link = document.createElement('a');
+            link.download = filename || `Slate_${width}x${height}.png`;
+            link.href = canvas.toDataURL('image/png');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showToast("Slate Exported", `${width}×${height} PNG generated`);
+        }
+
+        /* Clean Export Guideline Card Canvas */
+        function createGuidelineCardCanvas() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1200; canvas.height = 630;
+            const ctx = canvas.getContext('2d');
+
+            const cardTheme = document.getElementById('card-theme-select').value;
+            let cardBg = '#202025';
+            let textColor = '#FFFFFF';
+            let subTextColor = '#80808a';
+            let boxBg = '#121214';
+
+            if (cardTheme === 'light') {
+                cardBg = '#FFFFFF';
+                textColor = '#0F172A';
+                subTextColor = '#64748B';
+                boxBg = '#F1F5F9';
+            } else if (cardTheme === 'slate') {
+                cardBg = '#0F172A';
+                textColor = '#F8FAFC';
+                subTextColor = '#94A3B8';
+                boxBg = '#1E293B';
+            } else if (cardTheme === 'custom') {
+                cardBg = document.getElementById('card-bg-custom').value;
+                textColor = document.getElementById('card-text-custom').value;
+                boxBg = 'rgba(0, 0, 0, 0.2)';
+            }
+
+            ctx.fillStyle = cardBg;
+            ctx.fillRect(0, 0, 1200, 630);
+
+            const title = document.getElementById('guideline-title').value || "Brand Spec";
+            const w = parseInt(document.getElementById('input-width').value) || 1080;
+            const h = parseInt(document.getElementById('input-height').value) || 1080;
+            const ratioXY = document.getElementById('input-ratio-xy').value;
+            const ratioDec = document.getElementById('input-ratio-dec').value;
+            const shape = document.getElementById('input-shape').value;
+            const styleMode = document.getElementById('input-bg-style').value;
+            const c1 = document.getElementById('input-hex-color').value;
+            const c2 = document.getElementById('input-hex-color2').value;
+            const angle = parseInt(document.getElementById('input-grad-angle').value) || 135;
+
+            const isUVColorized = document.getElementById('input-uv-colorized').checked;
+            const uvMode = document.getElementById('input-uv-mode').value;
+            const uvDivs = parseInt(document.getElementById('input-uv-divs').value) || 8;
+            const uvPx = parseInt(document.getElementById('input-uv-px').value) || 100;
+
+            // Render Header with Dynamic High-Contrast Title
+            const titleColor = getContrastYIQ(cardBg);
+            ctx.fillStyle = titleColor;
+            ctx.font = 'bold 38px Inter, sans-serif';
+            ctx.fillText(title, 60, 85);
+
+            // Spec Box Background
+            ctx.fillStyle = boxBg;
+            ctx.fillRect(60, 120, 1080, 390);
+
+            // Render Shape Sample inside Box
+            const sampleMax = 310;
+            let sw = w >= h ? sampleMax : Math.max(40, Math.round(sampleMax * (w / h)));
+            let sh = h > w ? sampleMax : Math.max(40, Math.round(sampleMax * (h / w)));
+            
+            const sampleCanvas = document.createElement('canvas');
+            drawShapePatternToCanvas(sampleCanvas, sw, sh, shape, styleMode, c1, c2, angle, isUVColorized, uvMode, uvDivs, uvPx);
+            
+            ctx.drawImage(sampleCanvas, 600 - sw / 2, 315 - sh / 2);
+
+            // Metrics Badges
+            ctx.fillStyle = boxBg;
+            ctx.fillRect(60, 530, 340, 60);
+            ctx.fillRect(430, 530, 340, 60);
+            ctx.fillRect(800, 530, 340, 60);
+
+            ctx.fillStyle = textColor;
+            ctx.font = 'bold 22px JetBrains Mono, monospace';
+            ctx.fillText(`${w} × ${h} px`, 80, 568);
+            ctx.fillText(`${ratioXY} (${ratioDec})`, 450, 568);
+
+            // Item 4: Canvas Export Gradient String format (#XXXXXX #XXXXXX XXX°)
+            let hexLabel = c1.toUpperCase();
+            if (styleMode === 'gradient') hexLabel = `${c1.toUpperCase()} ${c2.toUpperCase()} ${angle}°`;
+            if (styleMode === 'uv_grid') hexLabel = isUVColorized ? 'UV COLOR' : 'UV MONO';
+            ctx.fillText(hexLabel, 820, 568);
+
+            return canvas;
+        }
+
+        function exportGuidelinePNG() {
+            const canvas = createGuidelineCardCanvas();
+            const link = document.createElement('a');
+            link.download = `Guideline_${document.getElementById('guideline-title').value || 'Spec'}.png`;
+            link.href = canvas.toDataURL('image/png');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("Guideline Card Downloaded", "Ready for CI documentation");
+        }
+
+        function copyGuidelineImage() {
+            const canvas = createGuidelineCardCanvas();
+            canvas.toBlob(blob => {
+                if (navigator.clipboard && window.ClipboardItem) {
+                    const item = new ClipboardItem({ "image/png": blob });
+                    navigator.clipboard.write([item]).then(() => {
+                        showToast("Copied Card Image", "Pasted directly into Docs or Figma");
+                    });
+                }
+            });
+        }
+
+        function syncHexColor(source) {
+            const hexPicker = document.getElementById('input-hex-color');
+            const hexText = document.getElementById('input-hex-text');
+
+            if (source === 'picker') {
+                hexText.value = hexPicker.value.toUpperCase();
+            } else {
+                let val = hexText.value.trim();
+                if (!val.startsWith('#')) val = '#' + val;
+                if (/^#[0-9A-F]{6}$/i.test(val)) {
+                    hexPicker.value = val;
+                }
+            }
+            updateConsolePreview();
+        }
+
+        function copyToClipboard(text, label) {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast("Copied to Clipboard", `${label}: ${text}`);
+                });
+            } else {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-999999px";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showToast("Copied to Clipboard", `${label}: ${text}`);
+                } catch (err) {
+                    showToast("Error", "Failed to copy.");
+                }
+                document.body.removeChild(textArea);
+            }
+        }
+
+        function downloadCurrentSlate() {
+            const w = parseInt(document.getElementById('input-width').value) || 1080;
+            const h = parseInt(document.getElementById('input-height').value) || 1080;
+            generateBlankSlatePNG(w, h, `Slate_${w}x${h}.png`);
+        }
+
+        function resetConsoleInputs() {
+            document.getElementById('input-width').value = 1080;
+            document.getElementById('input-height').value = 1080;
+            document.getElementById('input-ratio-xy').value = "1:1";
+            document.getElementById('input-ratio-dec').value = "1.00";
+            document.getElementById('input-shape').value = "rectangle";
+            document.getElementById('input-bg-style').value = "solid";
+            document.getElementById('input-hex-color').value = "#FFFFFF";
+            document.getElementById('input-hex-text').value = "#FFFFFF";
+            toggleStyleControls();
+            showToast("Workbench Reset", "Inputs reset to 1080x1080 (1:1)");
+        }
+
+        function loadIntoConsole(w, h, shape = "rectangle") {
+            document.getElementById('input-width').value = w;
+            document.getElementById('input-height').value = h;
+            document.getElementById('input-shape').value = shape;
+            handleInputCalculation('dim');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            showToast("Loaded to Monitor", `${w}×${h} px active`);
+        }
+
+        let toastTimeout;
+        function showToast(title, message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-title').innerText = title;
+            document.getElementById('toast-msg').innerText = message;
+
+            toast.classList.remove('translate-y-16', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-16', 'opacity-0');
+            }, 2500);
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.className = 'fa-solid fa-moon text-indigo-600';
+                text.innerText = 'Dark Mode';
+            } else {
+                html.classList.add('dark');
+                icon.className = 'fa-solid fa-sun text-amber-400';
+                text.innerText = 'Light Mode';
+            }
+        }
+
+        function switchTab(tabKey) {
+            activeTab = tabKey;
+            const data = PLATFORM_DATA[tabKey];
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.style.borderColor = 'transparent';
+                btn.classList.remove('bg-resolve-panel');
+            });
+
+            const activeBtn = document.getElementById(`tab-${tabKey}`);
+            if (activeBtn && data) {
+                activeBtn.style.borderColor = data.color;
+                activeBtn.classList.add('bg-resolve-panel');
+            }
+
+            renderTabContent(tabKey);
+        }
+
+        function renderTabContent(tabKey) {
+            const container = document.getElementById('tab-content');
+            const platform = PLATFORM_DATA[tabKey];
+
+            if (!platform) return;
+
+            let html = `
+                <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-resolve-panel p-4 rounded-xl border border-resolve-border shadow-sm">
+                    <div class="flex items-center space-x-3">
+                        <i class="${platform.icon} text-2xl" style="color: ${platform.color}"></i>
+                        <div>
+                            <h2 class="text-base font-bold text-gray-100">${platform.title}</h2>
+                            <p class="text-xs text-resolve-muted">Verified Social & Production Formats</p>
+                        </div>
+                    </div>
+                    <div>
+                        <a href="${platform.guideLink}" target="_blank" rel="noopener noreferrer" 
+                           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold text-white transition shadow-sm hover:opacity-90"
+                           style="background-color: ${platform.color}">
+                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> ${platform.guideLabel}
+                        </a>
+                    </div>
+                </div>
+            `;
+
+            if (tabKey === 'paper') {
+                html += renderPaperSection(platform.color);
+                container.innerHTML = html;
+                calculatePaperPixels();
+                return;
+            }
+
+            html += `<div class="space-y-8">`;
+
+            platform.categories.forEach(group => {
+                html += `
+                    <div class="bg-resolve-panel border border-resolve-border rounded-xl p-5 shadow-lg">
+                        <div class="flex items-center justify-between border-b border-resolve-border pb-3 mb-4">
+                            <h3 class="text-xs font-bold text-gray-100 tracking-wide flex items-center gap-2">
+                                <i class="${group.icon}" style="color: ${platform.color}"></i> ${group.category}
+                            </h3>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                `;
+
+                group.items.forEach(item => {
+                    const isCircle = item.shape === 'circle';
+                    
+                    html += `
+                        <div class="bg-resolve-card border border-resolve-border hover:border-resolve-accent/40 rounded-lg p-4 flex flex-col justify-between transition group">
+                            
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <h4 class="text-xs font-bold text-gray-200 group-hover:text-resolve-accent transition-colors flex items-center gap-1">
+                                        ${item.name}
+                                    </h4>
+                                    ${isCircle ? '<span class="text-[9px] bg-indigo-500/20 text-indigo-400 font-mono px-1.5 py-0.5 rounded border border-indigo-500/30">CIRCLE</span>' : ''}
+                                </div>
+
+                                <div class="pill-bg bg-resolve-bg dimmed-card-border rounded px-2.5 py-1.5 flex items-center justify-between font-mono text-xs mb-2">
+                                    <div class="flex items-center space-x-1.5">
+                                        <button onclick="copyToClipboard('${item.w}', 'Width')" class="hover:text-amber-400 text-gray-200 font-bold transition" title="Copy Width">${item.w}</button>
+                                        <span class="text-resolve-muted">×</span>
+                                        <button onclick="copyToClipboard('${item.h}', 'Height')" class="hover:text-amber-400 text-gray-200 font-bold transition" title="Copy Height">${item.h}</button>
+                                        <span class="text-resolve-muted text-[10px]">px</span>
+                                    </div>
+                                    <button onclick="copyToClipboard('${item.w}x${item.h}', 'Resolution')" class="text-resolve-muted hover:text-white transition" title="Copy WxH">
+                                        <i class="fa-regular fa-copy text-xs"></i>
+                                    </button>
+                                </div>
+
+                                <div class="flex items-center space-x-2 font-mono text-[10px] mb-3">
+                                    <button onclick="copyToClipboard('${item.ratio}', 'Ratio')" class="flex-1 pill-bg bg-resolve-bg dimmed-card-border hover:border-resolve-accent px-2 py-1 rounded text-resolve-accent flex items-center justify-between transition">
+                                        <span>${item.ratio}</span>
+                                        <i class="fa-regular fa-copy text-[9px] text-resolve-muted"></i>
+                                    </button>
+                                    <button onclick="copyToClipboard('${item.dec}', 'Decimal Ratio')" class="flex-1 pill-bg bg-resolve-bg dimmed-card-border hover:border-resolve-accent px-2 py-1 rounded text-amber-400 flex items-center justify-between transition">
+                                        <span>${item.dec}:1</span>
+                                        <i class="fa-regular fa-copy text-[9px] text-resolve-muted"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="checkerboard-bg rounded h-28 my-1 dimmed-card-border flex items-center justify-center p-2 overflow-hidden">
+                                <div class="flex items-center justify-center w-full h-full">
+                                    ${isCircle ? `
+                                        <div class="bg-white border-2 border-resolve-accent shadow-md flex items-center justify-center shape-circle-preview"
+                                             style="width: 72px; height: 72px;">
+                                            <i class="fa-regular fa-user text-gray-400 text-sm"></i>
+                                        </div>
+                                    ` : `
+                                        <div class="bg-white border-2 border-resolve-accent shadow-md rounded-sm"
+                                             style="
+                                                aspect-ratio: ${item.w}/${item.h}; 
+                                                max-height: 75px; 
+                                                max-width: 130px; 
+                                                width: ${item.w >= item.h ? '80%' : 'auto'}; 
+                                                height: ${item.h > item.w ? '80%' : 'auto'};
+                                             ">
+                                        </div>
+                                    `}
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2 mt-3 pt-2 border-t border-resolve-border">
+                                <button onclick="loadIntoConsole(${item.w}, ${item.h}, '${item.shape}')" class="resolve-btn py-1.5 rounded text-gray-300 flex items-center justify-center transition" title="Inspect in Workbench">
+                                    <i class="fa-solid fa-arrows-to-eye text-xs text-resolve-accent"></i>
+                                </button>
+                                <button onclick="generateBlankSlatePNG(${item.w}, ${item.h}, '${item.name.replace(/\s+/g, '_')}_${item.w}x${item.h}.png')" 
+                                        class="py-1.5 rounded text-white flex items-center justify-center shadow transition"
+                                        style="background-color: ${platform.color}" title="Download Blank Slate">
+                                    <i class="fa-solid fa-download text-xs"></i>
+                                </button>
+                            </div>
+
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
+        /* Item 10: Print Resolution Display Unit dropdown box styled explicitly for Light Mode readability */
+        function renderPaperSection(brandColor) {
+            return `
+                <div class="bg-resolve-panel border border-resolve-border rounded-xl p-5 shadow-lg">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-resolve-bg p-4 rounded-lg border border-resolve-border mb-6">
+                        <div>
+                            <label class="block text-[10px] font-bold text-resolve-muted uppercase tracking-wider mb-1">
+                                Print Resolution (DPI)
+                            </label>
+                            <select id="paper-dpi" onchange="calculatePaperPixels()" class="w-full resolve-input px-3 py-1.5 rounded font-mono text-xs font-bold text-indigo-400">
+                                <option value="300" selected>300 DPI (High Quality Print)</option>
+                                <option value="150">150 DPI (Standard Newspaper/Draft)</option>
+                                <option value="72">72 DPI (Web / Screen Equivalent)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-resolve-muted uppercase tracking-wider mb-1">
+                                Display Unit
+                            </label>
+                            <select id="paper-unit" onchange="calculatePaperPixels()" class="w-full resolve-input px-3 py-1.5 rounded text-xs font-bold text-indigo-400">
+                                <option value="px" selected>Pixels (px)</option>
+                                <option value="mm">Millimeters (mm)</option>
+                                <option value="cm">Centimeters (cm)</option>
+                                <option value="inch">Inches (in)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="paper-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                </div>
+            `;
+        }
+
+        function calculatePaperPixels() {
+            const grid = document.getElementById('paper-grid');
+            if (!grid) return;
+
+            const dpi = parseInt(document.getElementById('paper-dpi').value) || 300;
+            const unit = document.getElementById('paper-unit').value;
+
+            let html = '';
+
+            PAPER_SIZES.forEach(paper => {
+                const pxW = Math.round(paper.inW * dpi);
+                const pxH = Math.round(paper.inH * dpi);
+
+                let displayDim = "";
+                if (unit === 'px') displayDim = `${pxW} × ${pxH} px`;
+                else if (unit === 'mm') displayDim = `${paper.mmW} × ${paper.mmH} mm`;
+                else if (unit === 'cm') displayDim = `${(paper.mmW / 10).toFixed(1)} × ${(paper.mmH / 10).toFixed(1)} cm`;
+                else if (unit === 'inch') displayDim = `${paper.inW} × ${paper.inH} in`;
+
+                html += `
+                    <div class="bg-resolve-card border border-resolve-border hover:border-indigo-500/40 rounded-lg p-4 flex flex-col justify-between transition">
+                        <div>
+                            <h4 class="text-xs font-bold text-gray-200 mb-2">${paper.name}</h4>
+                            
+                            <div class="pill-bg bg-resolve-bg dimmed-card-border rounded px-2.5 py-1.5 flex items-center justify-between font-mono text-xs mb-2">
+                                <span class="text-indigo-400 font-bold">${displayDim}</span>
+                                <button onclick="copyToClipboard('${pxW}x${pxH}', 'Resolution')" class="text-resolve-muted hover:text-white" title="Copy Pixels">
+                                    <i class="fa-regular fa-copy text-xs"></i>
+                                </button>
+                            </div>
+
+                            <p class="text-[10px] text-resolve-muted font-mono mb-3">At ${dpi} DPI: ${pxW} × ${pxH} px</p>
+                        </div>
+
+                        <div class="checkerboard-bg rounded h-28 my-1 dimmed-card-border flex items-center justify-center p-2 overflow-hidden">
+                            <div class="bg-white border-2 border-indigo-500 shadow-md rounded-sm"
+                                 style="aspect-ratio: ${pxW}/${pxH}; max-height: 75px; max-width: 120px; height: 80%;">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 mt-3 pt-2 border-t border-resolve-border">
+                            <button onclick="loadIntoConsole(${pxW}, ${pxH}, 'rectangle')" class="resolve-btn py-1.5 rounded text-gray-300 flex items-center justify-center" title="Inspect in Workbench">
+                                <i class="fa-solid fa-arrows-to-eye text-xs text-indigo-400"></i>
+                            </button>
+                            <button onclick="generateBlankSlatePNG(${pxW}, ${pxH}, '${paper.name.replace(/\s+/g, '_')}_${pxW}x${pxH}.png')" class="bg-indigo-600 hover:bg-indigo-500 py-1.5 rounded text-white flex items-center justify-center shadow" title="Download Blank Slate">
+                                <i class="fa-solid fa-download text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            grid.innerHTML = html;
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('input-width').addEventListener('input', () => handleInputCalculation('dim'));
+            document.getElementById('input-height').addEventListener('input', () => handleInputCalculation('dim'));
+            document.getElementById('input-ratio-xy').addEventListener('input', () => handleInputCalculation('xy'));
+            document.getElementById('input-ratio-dec').addEventListener('input', () => handleInputCalculation('dec'));
+            document.getElementById('input-shape').addEventListener('change', updateConsolePreview);
+
+            document.getElementById('input-hex-color').addEventListener('input', () => syncHexColor('picker'));
+            document.getElementById('input-hex-text').addEventListener('input', () => syncHexColor('text'));
+            document.getElementById('input-hex-color2').addEventListener('input', updateConsolePreview);
+            document.getElementById('input-grad-angle').addEventListener('input', (e) => {
+                document.getElementById('angle-val').innerText = e.target.value;
+                updateConsolePreview();
+            });
+            document.getElementById('guideline-title').addEventListener('input', updateGuidelineCard);
+
+            updateConsolePreview();
+            switchTab('cinema');
+        });
+    </script>
+</body>
+</html>
