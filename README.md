@@ -1,9 +1,8 @@
 # RESTIO
+RESTIO is an open-source, browser-based tool for checking image dimensions, calculating aspect ratios, and creating visual assets for social media, video production, and print.
 
 ## USE THE APP
 https://barsaint.github.io/restio/
-
-RESTIO is an open-source, browser-based tool for checking image dimensions, calculating aspect ratios, and creating visual assets for social media, video production, and print.
 
 ## Features
 
