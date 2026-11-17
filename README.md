@@ -29,7 +29,7 @@ Presets are design starting points. Check each platform’s current guidance for
 
 ### Slate and guideline card maker
 
-![RESTIO workbench with a gradient slate and custom guideline card](docs/images/workbench.png)
+![RESTIO workbench with a gradient slate and custom guideline card](docs/images/workbench-2.png)
 
 ### Social platform presets
 
