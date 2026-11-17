@@ -2,6 +2,14 @@
 
 All notable changes to RESTIO are documented here.
 
+## [2026.12.12] - 2026-12-12
+
+### Improved
+
+- Updated the bundled interface to the 2026.12.12 DevKit design pass.
+- Refined workbench spacing, typography, controls, responsive behavior, and touch targets.
+- Improved export and delivery-tool presentation while retaining existing presets and persistence behavior.
+
 ## [2026.12.2] - 2026-12-02
 
 ### Added
