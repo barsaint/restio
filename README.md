@@ -33,7 +33,7 @@ Presets are design starting points. Check each platform’s current guidance for
 
 ### Social platform presets
 
-![Instagram post, reel, story, and profile-picture presets in RESTIO](docs/images/instagram-presets.png)
+![Instagram post, reel, story, and profile-picture presets in RESTIO](docs/images/formatlibrary.png)
 
 ## Getting started
 
