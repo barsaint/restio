@@ -31,7 +31,7 @@ Presets are design starting points. Check each platform’s current guidance for
 
 ## Getting started
 
-Download `Restio.html` and open it in your browser. No installation or build process is required. An internet connection is needed to load external styles, icons, and fonts.
+Download `Restio.html` and open it in your browser. No installation or build process is required. The core interface is self-contained; internet access is only needed when opening external reference links.
 
 **Remark:** This app was created with AI assistance from Gemini and ChatGPT.
 
