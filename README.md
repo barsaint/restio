@@ -4,6 +4,12 @@ RESTIO is an open-source, browser-based tool for checking image dimensions, calc
 ## USE THE APP
 https://barsaint.github.io/restio/
 
+## Latest release
+
+RESTIO 2026.12.12 includes the latest responsive interface refinements and delivery tools.
+
+See the [2026.12.12 release notes](https://github.com/barsaint/restio/releases/tag/2026.12.12).
+
 ## Features
 
 - Browse preset dimensions for common media formats.
